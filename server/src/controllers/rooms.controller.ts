@@ -78,15 +78,9 @@ export const updateRoomStatus = async (req: Request, res: Response) => {
 
 export const updateRoom = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
-    const { number, type, occupancy, price } = req.body;
+    const { number, type, occupancy, price, status, hasBalcony, bathroomCount, isAC } = req.body;
 
     try {
-        // Optional: Check ownership? 
-        // For now, allow owners to update any room or just theirs. 
-        // Strict approach: only ownerId match.
-        // Let's assume OWNER role can edit all, or just theirs. 
-        // Based on "edit the rooms which are created by me", restrict to ownerId.
-
         const existing = await prisma.room.findUnique({ where: { id: parseInt(id) } });
         if (!existing) return res.status(404).json({ error: 'Room not found' });
 
@@ -97,10 +91,13 @@ export const updateRoom = async (req: AuthRequest, res: Response) => {
         const room = await prisma.room.update({
             where: { id: parseInt(id) },
             data: {
-                number, type,
+                number, type, status,
                 occupancy: parseInt(occupancy),
-                price: parseFloat(price)
-            }
+                price: parseFloat(price),
+                hasBalcony: hasBalcony !== undefined ? Boolean(hasBalcony) : undefined,
+                bathroomCount: bathroomCount ? parseInt(bathroomCount) : undefined,
+                isAC: isAC !== undefined ? Boolean(isAC) : undefined
+            } as any
         });
         res.json(room);
     } catch (err) {
