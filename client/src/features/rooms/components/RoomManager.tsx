@@ -1,0 +1,234 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
+import { useAuth } from '../../auth/auth.store';
+import RoomGantt from './RoomGantt';
+import MyRooms from './MyRooms';
+
+const RoomManager = () => {
+    const { user } = useAuth();
+    const [rooms, setRooms] = useState<any[]>([]);
+    const [isAdding, setIsAdding] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editRoomData, setEditRoomData] = useState<any>(null);
+    const [newRoom, setNewRoom] = useState({
+        number: '', type: 'Standard', price: '', occupancy: '',
+        hasBalcony: false, isAC: false, bathroomCount: '1'
+    });
+
+    // Gantt Controls
+    const [startDate, setStartDate] = useState(new Date());
+
+    useEffect(() => {
+        fetchRooms();
+    }, []);
+
+    const fetchRooms = async () => {
+        try {
+            const res = await axios.get('/api/rooms');
+            setRooms(res.data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleAddRoom = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await axios.post('/api/rooms', newRoom);
+            setIsAdding(false);
+            toast.success('Room added successfully');
+            setNewRoom({
+                number: '', type: 'Standard', price: '', occupancy: '',
+                hasBalcony: false, isAC: false, bathroomCount: '1'
+            });
+            fetchRooms();
+        } catch (err: any) {
+            toast.error('Failed to add room: ' + (err.response?.data?.details || err.message));
+        }
+    };
+
+    const handleEditRoom = (room: any) => {
+        setEditRoomData(room);
+        setIsEditing(true);
+    };
+
+    const handleSaveEdit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editRoomData) return;
+        try {
+            await axios.put(`/api/rooms/${editRoomData.id}`, {
+                ...editRoomData,
+                price: parseFloat(editRoomData.price),
+                occupancy: parseInt(editRoomData.occupancy)
+            });
+            setIsEditing(false);
+            setEditRoomData(null);
+            toast.success('Room updated successfully');
+            fetchRooms();
+        } catch (err: any) {
+            toast.error('Failed to update room: ' + (err.response?.data?.details || err.message));
+        }
+    };
+
+    const handleDeleteRoom = async (id: number) => {
+        try {
+            await axios.delete(`/api/rooms/${id}`);
+            toast.success('Room deleted successfully');
+            fetchRooms();
+        } catch (err: any) {
+            toast.error('Failed to delete room: ' + (err.response?.data?.error || err.message));
+        }
+    };
+
+    // Date navigation
+    const shiftDate = (days: number) => {
+        const d = new Date(startDate);
+        d.setDate(d.getDate() + days);
+        setStartDate(d);
+    };
+
+    return (
+        <div className="space-y-8">
+            {/* Header / Actions */}
+            <div className="flex justify-end items-end">
+                <div className="space-x-4">
+                    <button onClick={() => setIsAdding(!isAdding)} className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700">
+                        {isAdding ? 'Cancel' : '+ Add New Room'}
+                    </button>
+                </div>
+            </div>
+
+            {/* Add Room Form */}
+            {isAdding && (
+                <div className="bg-white p-6 rounded-lg shadow border animate-fade-in">
+                    <h3 className="text-lg font-bold mb-4">Add New Room</h3>
+                    <form onSubmit={handleAddRoom} className="grid grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                        <div>
+                            <label className="block text-sm font-bold mb-1">Room Number</label>
+                            <input required type="text" className="w-full border p-2 rounded" value={newRoom.number} onChange={e => setNewRoom({ ...newRoom, number: e.target.value })} />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold mb-1">Type</label>
+                            <select className="w-full border p-2 rounded" value={newRoom.type} onChange={e => setNewRoom({ ...newRoom, type: e.target.value })}>
+                                <option value="Standard">Standard</option>
+                                <option value="Deluxe">Deluxe</option>
+                                <option value="Suite">Suite</option>
+                                <option value="Family">Family</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold mb-1">Price (₹)</label>
+                            <input required type="number" className="w-full border p-2 rounded" value={newRoom.price} onChange={e => setNewRoom({ ...newRoom, price: e.target.value })} />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold mb-1">Occupancy</label>
+                            <input required type="number" className="w-full border p-2 rounded" value={newRoom.occupancy} onChange={e => setNewRoom({ ...newRoom, occupancy: e.target.value })} />
+                        </div>
+
+                        {/* New Fields */}
+                        <div className="flex items-center space-x-2 pt-4">
+                            <input type="checkbox" id="addHasBalcony" className="w-4 h-4" checked={newRoom.hasBalcony} onChange={e => setNewRoom({ ...newRoom, hasBalcony: e.target.checked })} />
+                            <label htmlFor="addHasBalcony" className="text-sm font-bold">Balcony</label>
+                        </div>
+                        <div className="flex items-center space-x-2 pt-4">
+                            <input type="checkbox" id="addIsAC" className="w-4 h-4" checked={newRoom.isAC} onChange={e => setNewRoom({ ...newRoom, isAC: e.target.checked })} />
+                            <label htmlFor="addIsAC" className="text-sm font-bold">AC</label>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold mb-1">Bathrooms</label>
+                            <input required type="number" min="1" className="w-full border p-2 rounded" value={newRoom.bathroomCount} onChange={e => setNewRoom({ ...newRoom, bathroomCount: e.target.value })} />
+                        </div>
+                        <button type="submit" className="bg-green-600 text-white py-2 rounded font-bold hover:bg-green-700">Save Room</button>
+                    </form>
+                </div>
+            )}
+
+            {/* Gantt Chart Section */}
+            <section className="space-y-4">
+                <div className="flex justify-between items-center">
+                    <h3 className="text-xl font-semibold">Room Availability</h3>
+                    <div className="flex items-center space-x-2">
+                        <button onClick={() => shiftDate(-7)} className="p-2 hover:bg-gray-100 rounded">&lt;</button>
+                        <span className="font-medium">{startDate.toLocaleDateString()}</span>
+                        <button onClick={() => shiftDate(7)} className="p-2 hover:bg-gray-100 rounded">&gt;</button>
+                    </div>
+                </div>
+                <RoomGantt rooms={rooms} startDate={startDate} daysToShow={14} />
+            </section>
+
+            {/* My Rooms Section */}
+            <section className="space-y-4">
+                <h3 className="text-xl font-semibold">My Rooms</h3>
+                {user && <MyRooms rooms={rooms} currentUserId={user.id} onEdit={handleEditRoom} onDelete={handleDeleteRoom} />}
+            </section>
+
+            {/* Edit Room Modal */}
+            {isEditing && editRoomData && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+                        <h3 className="text-lg font-bold mb-4">Edit Room {editRoomData.number}</h3>
+                        <form onSubmit={handleSaveEdit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-bold mb-1">Room Number</label>
+                                <input required type="text" className="w-full border p-2 rounded" value={editRoomData.number} onChange={e => setEditRoomData({ ...editRoomData, number: e.target.value })} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-bold mb-1">Type</label>
+                                    <select className="w-full border p-2 rounded" value={editRoomData.type} onChange={e => setEditRoomData({ ...editRoomData, type: e.target.value })}>
+                                        <option value="Standard">Standard</option>
+                                        <option value="Deluxe">Deluxe</option>
+                                        <option value="Suite">Suite</option>
+                                        <option value="Family">Family</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold mb-1">Status</label>
+                                    <select className="w-full border p-2 rounded" value={editRoomData.status} onChange={e => setEditRoomData({ ...editRoomData, status: e.target.value })}>
+                                        <option value="AVAILABLE">Available</option>
+                                        <option value="OCCUPIED">Occupied</option>
+                                        <option value="CLEANING">Cleaning</option>
+                                        <option value="MAINTENANCE">Maintenance</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-bold mb-1">Price (₹)</label>
+                                    <input required type="number" className="w-full border p-2 rounded" value={editRoomData.price} onChange={e => setEditRoomData({ ...editRoomData, price: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold mb-1">Occupancy</label>
+                                    <input required type="number" className="w-full border p-2 rounded" value={editRoomData.occupancy} onChange={e => setEditRoomData({ ...editRoomData, occupancy: e.target.value })} />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-4 border-t pt-4">
+                                <div className="flex items-center space-x-2">
+                                    <input type="checkbox" id="editHasBalcony" className="w-4 h-4" checked={!!editRoomData.hasBalcony} onChange={e => setEditRoomData({ ...editRoomData, hasBalcony: e.target.checked })} />
+                                    <label htmlFor="editHasBalcony" className="text-sm font-medium">Balcony</label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <input type="checkbox" id="editIsAC" className="w-4 h-4" checked={!!editRoomData.isAC} onChange={e => setEditRoomData({ ...editRoomData, isAC: e.target.checked })} />
+                                    <label htmlFor="editIsAC" className="text-sm font-medium">AC</label>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold mb-1">Bathrooms</label>
+                                    <input required type="number" min="1" className="w-full border p-2 rounded" value={editRoomData.bathroomCount || 1} onChange={e => setEditRoomData({ ...editRoomData, bathroomCount: e.target.value })} />
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end space-x-2 mt-6">
+                                <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 border rounded hover:bg-gray-50">Cancel</button>
+                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default RoomManager;

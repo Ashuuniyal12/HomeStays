@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String    @id @default(uuid())
+  username String    @unique
+  password String
+  role     String    // OWNER, STAFF, GUEST
+  name     String?
+  isActive Boolean   @default(true)
+  checkIn  DateTime?
+  checkOut DateTime?
+  
+  bookings Booking[]
+  rooms    Room[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Room {
+  id        Int      @id @default(autoincrement())
+  number    String   @unique
+  type      String   // Standard, Deluxe, Family
+  occupancy Int
+  price     Float
+  status    String   // AVAILABLE, OCCUPIED, CLEANING, MAINTENANCE
+
+  ownerId   String?
+  owner     User?    @relation(fields: [ownerId], references: [id])
+
+  hasBalcony    Boolean @default(false)
+  bathroomCount Int     @default(1)
+  isAC          Boolean @default(false)
+
+  bookings Booking[]
+}
+
+model Booking {
+  id        String   @id @default(uuid())
+  guestId   String
+  guest     User     @relation(fields: [guestId], references: [id])
+  roomId    Int
+  room      Room     @relation(fields: [roomId], references: [id])
+  checkIn   DateTime
+  checkOut  DateTime
+  status    String   // ACTIVE, COMPLETED, CANCELLED
+  
+  plainPassword String?
+  
+  orders    Order[]
+  billAmount Float     @default(0)
+  paidAmount Float     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MenuItem {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  category    String
+  price       Float
+  isVeg       Boolean
+  available   Boolean @default(true)
+
+  orderItems OrderItem[]
+}
+
+model Order {
+  id        String   @id @default(uuid())
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+  status    String   // PENDING, PREPARING, READY, DELIVERED
+  total     Float
+  
+  items     OrderItem[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id])
+  menuItemId Int
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  quantity   Int
+  price      Float
+}

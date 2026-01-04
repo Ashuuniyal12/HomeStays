@@ -1,0 +1,214 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+import BillView from '../../billing/components/BillView';
+import { toast } from 'react-hot-toast';
+
+const BookingManager = () => {
+    const [bookings, setBookings] = useState<any[]>([]);
+    const [rooms, setRooms] = useState<any[]>([]);
+    const [showForm, setShowForm] = useState(false);
+    const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
+
+    // Form State
+    const [formData, setFormData] = useState({
+        roomId: '',
+        guestName: '',
+        checkInDate: new Date().toISOString().split('T')[0],
+        expectedCheckOutDate: ''
+    });
+
+    // New Guest Creds
+    const [newGuestCreds, setNewGuestCreds] = useState<any>(null);
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const fetchData = async () => {
+        try {
+            const [bRes, rRes] = await Promise.all([
+                axios.get('/api/bookings/active'),
+                axios.get('/api/rooms')
+            ]);
+            setBookings(bRes.data);
+            setRooms(rRes.data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleCheckIn = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const res = await axios.post('/api/bookings', formData);
+            setNewGuestCreds(res.data.credentials);
+            setShowForm(false);
+            fetchData();
+            // Reset form
+            setFormData({ roomId: '', guestName: '', checkInDate: '', expectedCheckOutDate: '' });
+        } catch (err) {
+            toast.error('Check-in failed');
+        }
+    };
+
+    const handleCheckOut = async (id: string) => {
+        if (!confirm('Confirm Check-out?')) return;
+        try {
+            await axios.post(`/api/bookings/${id}/checkout`);
+            toast.success('Check-out successful');
+            setSelectedBookingId(null);
+            fetchData();
+        } catch (err) {
+            toast.error('Checkout failed');
+        }
+    };
+
+    return (
+        <div>
+            {newGuestCreds && (
+                <div className="mb-6 bg-green-100 border border-green-400 text-green-700 p-4 rounded relative">
+                    <strong className="font-bold">Check-in Successful!</strong>
+                    <span className="block sm:inline"> Share these credentials with the guest.</span>
+                    <div className="mt-2 bg-white p-2 rounded border">
+                        <p>Username: <strong>{newGuestCreds.username}</strong></p>
+                        <p>Password: <strong>{newGuestCreds.password}</strong></p>
+                    </div>
+                    <button className="absolute top-0 right-0 px-4 py-3" onClick={() => setNewGuestCreds(null)}>
+                        <span role="button">×</span>
+                    </button>
+                </div>
+            )}
+
+            <div className="mb-6 flex justify-between items-center">
+                <h2 className="text-xl font-bold">Active Bookings</h2>
+                <button
+                    onClick={() => setShowForm(!showForm)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                >
+                    {showForm ? 'Cancel' : 'New Check-in'}
+                </button>
+            </div>
+
+            {showForm && (
+                <div className="bg-white p-6 rounded-lg shadow mb-8 border-l-4 border-blue-500">
+                    <h3 className="font-bold text-lg mb-4">Guest Check-in</h3>
+                    <form onSubmit={handleCheckIn} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Select Room</label>
+                            <select
+                                required
+                                className="w-full border p-2 rounded"
+                                value={formData.roomId}
+                                onChange={e => setFormData({ ...formData, roomId: e.target.value })}
+                            >
+                                <option value="">-- Select Available Room --</option>
+                                {rooms.filter(r => r.status === 'AVAILABLE').map(r => (
+                                    <option key={r.id} value={r.id}>Room {r.number} ({r.type})</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Guest Name</label>
+                            <input
+                                required
+                                type="text"
+                                className="w-full border p-2 rounded"
+                                value={formData.guestName}
+                                onChange={e => setFormData({ ...formData, guestName: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Check-in Date</label>
+                            <input
+                                required
+                                type="date"
+                                className="w-full border p-2 rounded"
+                                value={formData.checkInDate}
+                                onChange={e => setFormData({ ...formData, checkInDate: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Expected Check-out</label>
+                            <input
+                                required
+                                type="date"
+                                className="w-full border p-2 rounded"
+                                value={formData.expectedCheckOutDate}
+                                onChange={e => setFormData({ ...formData, expectedCheckOutDate: e.target.value })}
+                            />
+                        </div>
+                        <div className="md:col-span-2">
+                            <button type="submit" className="w-full bg-green-600 text-white py-2 rounded font-bold hover:bg-green-700">
+                                Confirm Check-in
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
+
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+                <table className="min-w-full">
+                    <thead className="bg-gray-50">
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guest</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-in</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expected Out</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                        {bookings.map(booking => (
+                            <tr key={booking.id}>
+                                <td className="px-6 py-4 whitespace-nowrap font-bold text-gray-900">
+                                    {booking.room?.number || booking.roomId}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    {booking.guest?.name}
+                                    <div className="text-xs text-gray-500">User: <span className="font-mono text-gray-700">{booking.guest?.username}</span></div>
+                                    <div className="text-xs text-gray-500">Pass: <span className="font-mono text-gray-700">{booking.plainPassword || '****'}</span></div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {new Date(booking.checkIn).toLocaleDateString()}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {new Date(booking.checkOut).toLocaleDateString()}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button
+                                        onClick={() => setSelectedBookingId(booking.id)}
+                                        className="text-blue-600 hover:text-blue-900 mr-4"
+                                    >
+                                        View Bill
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                {bookings.length === 0 && <div className="p-6 text-center text-gray-500">No active bookings</div>}
+            </div>
+
+            {selectedBookingId && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-lg max-w-md w-full relative">
+                        <button
+                            onClick={() => setSelectedBookingId(null)}
+                            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl font-bold px-2"
+                        >
+                            &times;
+                        </button>
+                        <BillView
+                            bookingId={selectedBookingId}
+                            isAdmin={true}
+                            onCheckout={() => handleCheckOut(selectedBookingId)}
+                        />
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default BookingManager;
