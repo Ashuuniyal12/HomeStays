@@ -1,28 +1,57 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
+import { toast } from 'react-hot-toast';
+
+// Column configurations
+const COLUMNS = [
+    { id: 'PENDING', title: 'New Orders', color: 'bg-red-50', borderColor: 'border-red-200', titleColor: 'text-red-700' },
+    { id: 'PREPARING', title: 'Preparing', color: 'bg-yellow-50', borderColor: 'border-yellow-200', titleColor: 'text-yellow-700' },
+    { id: 'READY', title: 'Ready to Serve', color: 'bg-green-50', borderColor: 'border-green-200', titleColor: 'text-green-700' },
+    { id: 'DELIVERED', title: 'Completed', color: 'bg-gray-50', borderColor: 'border-gray-200', titleColor: 'text-gray-600' }
+];
+
+interface OrderItem {
+    id: number;
+    menuItem: { name: string; };
+    quantity: number;
+    price: number;
+}
+
+interface Order {
+    id: string;
+    booking: { room: { number: string; } };
+    createdAt: string;
+    status: string;
+    items: OrderItem[];
+    total: number;
+}
 
 const KitchenOrders = () => {
-    const [orders, setOrders] = useState<any[]>([]);
-    const [filter, setFilter] = useState('ALL');
+    const [orders, setOrders] = useState<Order[]>([]);
 
     useEffect(() => {
-        // Reset state on mount to prevent stale data
-        setOrders([]);
         fetchOrders();
-
         const socket = io();
 
-        socket.on('order:new', (newOrder: any) => {
+        // Listen for new orders
+        socket.on('order:new', (newOrder: Order) => {
             setOrders(prev => {
-                // Strict deduplication
                 if (prev.some(o => o.id === newOrder.id)) return prev;
+                // Play sound or toast here
+                toast('New Order Received!', { icon: '🔔' });
                 return [newOrder, ...prev];
             });
         });
 
+        // Listen for status updates (if another admin updates)
+        socket.on('order:update', (updated: Order) => {
+            setOrders(prev => prev.map(o => o.id === updated.id ? updated : o));
+        });
+
         return () => {
             socket.off('order:new');
+            socket.off('order:update');
             socket.disconnect();
         };
     }, []);
@@ -31,58 +60,103 @@ const KitchenOrders = () => {
         try {
             const res = await axios.get('/api/orders');
             setOrders(res.data);
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error('Failed to fetch orders', err); }
     };
 
-    const updateStatus = async (id: string, status: string) => {
+    const updateStatus = async (id: string, nextStatus: string) => {
         try {
-            await axios.patch(`/api/orders/${id}/status`, { status });
-            fetchOrders();
-        } catch (err) { alert('Update failed'); }
+            // Optimistic update
+            setOrders(prev => prev.map(o => o.id === id ? { ...o, status: nextStatus } : o));
+
+            await axios.patch(`/api/orders/${id}/status`, { status: nextStatus });
+        } catch (err) {
+            toast.error('Failed to update status');
+            fetchOrders(); // Revert on fail
+        }
+    };
+
+    const getNextStatus = (current: string) => {
+        if (current === 'PENDING') return 'PREPARING';
+        if (current === 'PREPARING') return 'READY';
+        if (current === 'READY') return 'DELIVERED';
+        return null;
+    };
+
+    const renderCard = (order: Order) => {
+        const nextStatus = getNextStatus(order.status);
+        const timeAgo = Math.floor((new Date().getTime() - new Date(order.createdAt).getTime()) / 60000);
+
+        return (
+            <div key={order.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-3 animate-fade-in hover:shadow-md transition-shadow">
+                <div className="flex justify-between items-start mb-2">
+                    <span className="font-bold text-lg text-gray-800">Room {order.booking?.room?.number}</span>
+                    <span className="text-xs font-mono text-gray-500">{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+
+                <div className="border-t border-b border-dashed border-gray-100 py-2 my-2 space-y-1">
+                    {order.items.map((item, idx) => (
+                        <div key={idx} className="flex justify-between text-sm">
+                            <span className="text-gray-700"><span className="font-bold">{item.quantity}x</span> {item.menuItem?.name}</span>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="flex justify-between items-center mt-3">
+                    <span className="text-xs font-medium text-gray-400">{timeAgo} mins ago</span>
+                    {nextStatus && (
+                        <button
+                            onClick={() => updateStatus(order.id, nextStatus)}
+                            className={`px-3 py-1.5 rounded text-xs font-bold text-white shadow-sm transition-transform active:scale-95
+                                ${order.status === 'PENDING' ? 'bg-yellow-500 hover:bg-yellow-600' :
+                                    order.status === 'PREPARING' ? 'bg-blue-500 hover:bg-blue-600' :
+                                        'bg-green-500 hover:bg-green-600'}`}
+                        >
+                            {order.status === 'PENDING' ? 'Start Cooking' :
+                                order.status === 'PREPARING' ? 'Mark Ready' : 'Deliver'} &rarr;
+                        </button>
+                    )}
+                </div>
+            </div>
+        );
     };
 
     return (
-        <div className="space-y-4">
-            <div className="flex gap-2 mb-4">
-                {['ALL', 'PENDING', 'PREPARING', 'READY', 'DELIVERED'].map(s => (
-                    <button key={s} onClick={() => setFilter(s)} className={`px-3 py-1 rounded text-xs ${filter === s ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>
-                        {s}
-                    </button>
-                ))}
+        <div className="h-[calc(100vh-140px)] flex flex-col">
+            <div className="flex justify-between items-center mb-6">
+                <div className="text-sm text-gray-500">
+                    Auto-refreshing • {orders.length} Active Orders
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {orders.filter(o => filter === 'ALL' || o.status === filter).map(order => (
-                    <div key={order.id} className={`border rounded-lg p-4 shadow-sm ${order.status === 'PENDING' ? 'bg-red-50 border-red-200' : 'bg-white'}`}>
-                        <div className="flex justify-between items-start mb-2">
-                            <div>
-                                <h4 className="font-bold">Room {order.booking?.room?.number}</h4>
-                                <span className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleTimeString()}</span>
+            <div className="flex-1 overflow-x-auto overflow-y-hidden">
+                <div className="flex gap-6 h-full min-w-[1000px]">
+                    {COLUMNS.map(col => {
+                        const colOrders = orders.filter(o => o.status === col.id);
+                        return (
+                            <div key={col.id} className={`flex-1 flex flex-col min-w-[280px] rounded-xl ${col.color} border ${col.borderColor}`}>
+                                {/* Column Header */}
+                                <div className={`p-4 border-b ${col.borderColor} flex justify-between items-center sticky top-0 bg-inherit rounded-t-xl z-10`}>
+                                    <h3 className={`font-bold ${col.titleColor}`}>{col.title}</h3>
+                                    <span className="bg-white bg-opacity-60 px-2 py-0.5 rounded-full text-xs font-bold shadow-sm">
+                                        {colOrders.length}
+                                    </span>
+                                </div>
+
+                                {/* Orders List */}
+                                <div className="p-3 overflow-y-auto flex-1 custom-scrollbar">
+                                    {colOrders.length === 0 ? (
+                                        <div className="h-32 flex items-center justify-center text-gray-400 text-sm italic">
+                                            No orders
+                                        </div>
+                                    ) : (
+                                        colOrders.map(order => renderCard(order))
+                                    )}
+                                </div>
                             </div>
-                            <span className={`px-2 py-1 text-xs rounded font-bold status-${order.status}`}>
-                                {order.status}
-                            </span>
-                        </div>
-                        <ul className="text-sm border-t border-b py-2 my-2 space-y-1">
-                            {order.items.map((item: any) => (
-                                <li key={item.id} className="flex justify-between">
-                                    <span>{item.quantity}x {item.menuItem?.name}</span>
-                                    <span>₹{item.price * item.quantity}</span>
-                                </li>
-                            ))}
-                        </ul>
-                        <div className="flex justify-between items-center mt-3">
-                            <span className="font-bold">Total: ₹{order.total}</span>
-                            <div className="space-x-2">
-                                {order.status === 'PENDING' && <button onClick={() => updateStatus(order.id, 'PREPARING')} className="bg-yellow-500 text-white px-2 py-1 rounded text-xs">Start Preparing</button>}
-                                {order.status === 'PREPARING' && <button onClick={() => updateStatus(order.id, 'READY')} className="bg-blue-500 text-white px-2 py-1 rounded text-xs">Mark Ready</button>}
-                                {order.status === 'READY' && <button onClick={() => updateStatus(order.id, 'DELIVERED')} className="bg-green-500 text-white px-2 py-1 rounded text-xs">Deliver</button>}
-                            </div>
-                        </div>
-                    </div>
-                ))}
+                        );
+                    })}
+                </div>
             </div>
-            {orders.length === 0 && <p className="text-gray-500">No orders found.</p>}
         </div>
     );
 };
