@@ -121,29 +121,45 @@ const MenuManager = () => {
             {/* Menu Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {items.map(item => (
-                    <div key={item.id} className={`bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-start transition hover:shadow-md ${!item.available ? 'opacity-75' : ''}`}>
-                        <div className="flex-1 pr-4">
+                    <div
+                        key={item.id}
+                        className={`relative bg-white p-4 rounded-xl shadow-sm border-l-4 border-y border-r flex justify-between items-start transition hover:shadow-md overflow-hidden ${!item.available ? 'border-gray-200' :
+                                item.isVeg ? 'border-l-green-500 border-y-green-100 border-r-green-100' :
+                                    'border-l-red-500 border-y-red-100 border-r-red-100'
+                            }`}
+                    >
+                        {/* Out of Stock Pattern Overlay */}
+                        {!item.available && (
+                            <div className="absolute inset-0 pointer-events-none opacity-20 z-0"
+                                style={{
+                                    backgroundImage: `repeating-linear-gradient(45deg, #fbbf24 0, #fbbf24 1px, transparent 0, transparent 50%)`,
+                                    backgroundSize: '10px 10px'
+                                }}
+                            />
+                        )}
+
+                        <div className="flex-1 pr-4 relative z-10">
                             <div className="flex items-center mb-1">
                                 <span className={`w-4 h-4 rounded-md flex items-center justify-center border mr-2 ${item.isVeg ? 'border-green-500' : 'border-red-500'}`}>
                                     <span className={`w-2 h-2 rounded-full ${item.isVeg ? 'bg-green-500' : 'bg-red-500'}`}></span>
                                 </span>
                                 <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">{item.category}</div>
                             </div>
-                            <h3 className="font-bold text-gray-800 text-lg mb-1">{item.name}</h3>
+                            <h3 className={`font-bold text-lg mb-1 ${!item.available ? 'text-gray-400 line-through' : 'text-gray-800'}`}>{item.name}</h3>
                             <p className="text-gray-500 text-sm line-clamp-2">{item.description || 'Delightful dish prepared fresh.'}</p>
                             <div className="mt-3 font-bold text-gray-900">₹{item.price}</div>
                         </div>
 
-                        <div className="flex flex-col items-end gap-3 min-w-[120px]">
+                        <div className="flex flex-col items-end gap-3 min-w-[120px] relative z-10">
                             {/* Stock Toggle */}
                             <button
                                 onClick={() => toggleAvailability(item.id, item.available)}
                                 className={`flex items-center px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${item.available
                                     ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
-                                    : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'
+                                    : 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100'
                                     }`}
                             >
-                                <div className={`w-2 h-2 rounded-full mr-2 ${item.available ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                                <div className={`w-2 h-2 rounded-full mr-2 ${item.available ? 'bg-green-500' : 'bg-yellow-600'}`}></div>
                                 {item.available ? 'IN STOCK' : 'OUT STOCK'}
                             </button>
 
