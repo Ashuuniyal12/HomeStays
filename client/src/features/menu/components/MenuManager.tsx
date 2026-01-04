@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { Edit2, Plus, Trash2, X } from 'lucide-react';
+import Loader from '../../../utils/Loader';
 
 const MenuManager = () => {
     const [items, setItems] = useState<any[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<any>(null);
+    const [loadingOp, setLoadingOp] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -45,6 +47,7 @@ const MenuManager = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoadingOp(true);
         try {
             if (editingItem) {
                 await axios.patch(`/api/menu/${editingItem.id}`, formData);
@@ -55,31 +58,55 @@ const MenuManager = () => {
             }
             setIsModalOpen(false);
             fetchMenu();
-        } catch (err) { toast.error('Operation failed'); }
+        } catch (err) {
+            toast.error('Operation failed');
+        } finally {
+            setLoadingOp(false);
+        }
     };
 
     const toggleAvailability = async (id: number, currentStatus: boolean) => {
+        setLoadingOp(true);
         try {
             await axios.patch(`/api/menu/${id}`, { available: !currentStatus });
             toast.success('Availability updated');
             fetchMenu();
-        } catch (err) { toast.error('Update failed'); }
+        } catch (err) {
+            toast.error('Update failed');
+        } finally {
+            setLoadingOp(false);
+        }
     };
 
     const deleteItem = async (id: number) => {
         if (!confirm('Are you sure you want to delete this item?')) return;
+        setLoadingOp(true);
         try {
             await axios.delete(`/api/menu/${id}`);
             toast.success('Item deleted');
             fetchMenu();
-        } catch (err) { toast.error('Delete failed'); }
+        } catch (err) {
+            toast.error('Delete failed');
+        } finally {
+            setLoadingOp(false);
+        }
     };
 
     return (
         <div className="max-w-7xl mx-auto p-6">
+            {/* Operation Loader Modal */}
+            {loadingOp && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-[70] backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center animate-in zoom-in-95 duration-200">
+                        <Loader size={48} className="text-blue-600 mb-4" />
+                        <h3 className="text-lg font-bold text-gray-800">Processing...</h3>
+                        <p className="text-gray-500 text-sm mt-1">Please wait a moment.</p>
+                    </div>
+                </div>
+            )}
+
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Menu Management</h1>
                     <p className="text-gray-500 mt-1">Manage your food items, prices, and availability</p>
                 </div>
                 <button
@@ -92,45 +119,51 @@ const MenuManager = () => {
             </div>
 
             {/* Menu Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {items.map(item => (
-                    <div key={item.id} className={`group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all hover:shadow-md ${!item.available ? 'opacity-70' : ''}`}>
-                        <div className={`h-1 w-full ${item.isVeg ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                        <div className="p-5">
-                            <div className="flex justify-between items-start mb-2">
-                                <div>
-                                    <h4 className="font-bold text-lg text-gray-900 leading-tight">{item.name}</h4>
-                                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{item.category}</span>
-                                </div>
-                                <span className="font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md text-sm">₹{item.price}</span>
+                    <div key={item.id} className={`bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-start transition hover:shadow-md ${!item.available ? 'opacity-75' : ''}`}>
+                        <div className="flex-1 pr-4">
+                            <div className="flex items-center mb-1">
+                                <span className={`w-4 h-4 rounded-md flex items-center justify-center border mr-2 ${item.isVeg ? 'border-green-500' : 'border-red-500'}`}>
+                                    <span className={`w-2 h-2 rounded-full ${item.isVeg ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                </span>
+                                <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">{item.category}</div>
                             </div>
+                            <h3 className="font-bold text-gray-800 text-lg mb-1">{item.name}</h3>
+                            <p className="text-gray-500 text-sm line-clamp-2">{item.description || 'Delightful dish prepared fresh.'}</p>
+                            <div className="mt-3 font-bold text-gray-900">₹{item.price}</div>
+                        </div>
 
-                            <p className="text-gray-600 text-sm mb-4 line-clamp-2 h-10">{item.description || 'No description provided.'}</p>
+                        <div className="flex flex-col items-end gap-3 min-w-[120px]">
+                            {/* Stock Toggle */}
+                            <button
+                                onClick={() => toggleAvailability(item.id, item.available)}
+                                className={`flex items-center px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${item.available
+                                    ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                                    : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'
+                                    }`}
+                            >
+                                <div className={`w-2 h-2 rounded-full mr-2 ${item.available ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                                {item.available ? 'IN STOCK' : 'OUT STOCK'}
+                            </button>
 
-                            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                            {/* Actions */}
+                            <div className="flex items-center gap-1 mt-auto">
                                 <button
-                                    onClick={() => toggleAvailability(item.id, item.available)}
-                                    className={`text-xs font-bold px-3 py-1.5 rounded-full transition-colors ${item.available ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}
+                                    onClick={() => openModal(item)}
+                                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                    title="Edit Item"
                                 >
-                                    {item.available ? '● In Stock' : '○ Out of Stock'}
+                                    <Edit2 size={18} />
                                 </button>
-
-                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button
-                                        onClick={() => openModal(item)}
-                                        className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition"
-                                        title="Edit"
-                                    >
-                                        <Edit2 size={18} />
-                                    </button>
-                                    <button
-                                        onClick={() => deleteItem(item.id)}
-                                        className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition"
-                                        title="Delete"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
-                                </div>
+                                <div className="w-px h-4 bg-gray-200 mx-1"></div>
+                                <button
+                                    onClick={() => deleteItem(item.id)}
+                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                    title="Delete Item"
+                                >
+                                    <Trash2 size={18} />
+                                </button>
                             </div>
                         </div>
                     </div>
