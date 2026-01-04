@@ -50,12 +50,13 @@ const MyRooms: React.FC<MyRoomsProps> = ({ rooms, currentUserId, onEdit, onDelet
                 <div
                     key={room.id}
                     className={`rounded-xl shadow-sm border p-5 hover:shadow-md transition-shadow flex flex-col sm:flex-row group gap-5 relative overflow-hidden
-                        ${room.status === 'CLEANING'
-                            ? 'bg-yellow-50 border-yellow-400 border-2'
-                            : 'bg-white border-gray-100'}`}
+                        ${room.status === 'CLEANING' ? 'bg-yellow-50 border-yellow-400 border-2' :
+                            room.status === 'OCCUPIED' ? 'bg-red-50 border-red-300 border-2' :
+                                room.status === 'MAINTENANCE' ? 'bg-gray-100 border-gray-400 border-2' :
+                                    'bg-white border-gray-100'}`}
                 >
-                    {/* Cleaning Pattern Overlay */}
-                    {room.status === 'CLEANING' && (
+                    {/* Pattern Overlay for Special States */}
+                    {(room.status === 'CLEANING' || room.status === 'OCCUPIED' || room.status === 'MAINTENANCE') && (
                         <div className="absolute inset-0 pointer-events-none opacity-10"
                             style={{
                                 backgroundImage: `repeating-linear-gradient(45deg, #000 0, #000 1px, transparent 0, transparent 50%)`,
@@ -115,7 +116,8 @@ const MyRooms: React.FC<MyRoomsProps> = ({ rooms, currentUserId, onEdit, onDelet
                             <span className={`block mt-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-center
                                 ${room.status === 'AVAILABLE' ? 'bg-green-100 text-green-700' :
                                     room.status === 'OCCUPIED' ? 'bg-red-100 text-red-700' :
-                                        'bg-yellow-100 text-yellow-700'}`}>
+                                        room.status === 'MAINTENANCE' ? 'bg-gray-200 text-gray-700' :
+                                            'bg-yellow-100 text-yellow-700'}`}>
                                 {room.status}
                             </span>
                         </div>
@@ -124,7 +126,8 @@ const MyRooms: React.FC<MyRoomsProps> = ({ rooms, currentUserId, onEdit, onDelet
                         <span className={`sm:hidden text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full
                                 ${room.status === 'AVAILABLE' ? 'bg-green-100 text-green-700' :
                                 room.status === 'OCCUPIED' ? 'bg-red-100 text-red-700' :
-                                    'bg-yellow-100 text-yellow-700'}`}>
+                                    room.status === 'MAINTENANCE' ? 'bg-gray-200 text-gray-700' :
+                                        'bg-yellow-100 text-yellow-700'}`}>
                             {room.status}
                         </span>
 
