@@ -125,8 +125,9 @@ export const checkout = async (req: Request, res: Response) => {
         const foodTotal = orders.reduce((sum, order) => sum + order.total, 0);
 
         // 3. Tax
-        const tax = (roomTotal + foodTotal) * 0.05;
-        const grandTotal = roomTotal + foodTotal + tax;
+        // 3. Tax (Removed)
+        const tax = 0;
+        const grandTotal = roomTotal + foodTotal;
 
         // Complete Booking with Bill Amount
         const updatedBooking = await prisma.booking.update({
@@ -189,8 +190,8 @@ export const getEarnings = async (req: Request, res: Response) => {
                     where: { bookingId: b.id, status: { not: 'CANCELLED' } }
                 });
                 const foodTotal = orders.reduce((sum, order) => sum + order.total, 0);
-                const tax = (roomTotal + foodTotal) * 0.05;
-                amount = roomTotal + foodTotal + tax;
+                const tax = 0;
+                amount = roomTotal + foodTotal;
 
                 // Update DB to persist fix
                 await prisma.booking.update({
@@ -252,14 +253,14 @@ export const getBill = async (req: Request, res: Response) => {
             }))
         );
 
-        // 3. Tax (example 5%)
-        const tax = (roomTotal + foodTotal) * 0.05;
+        // 3. Tax (Removed)
+        const tax = 0;
 
         res.json({
             roomTotal,
             foodTotal,
-            tax,
-            grandTotal: roomTotal + foodTotal + tax,
+            tax: 0,
+            grandTotal: roomTotal + foodTotal,
             breakdown: {
                 days: diffDays,
                 roomRate: booking.room.price,

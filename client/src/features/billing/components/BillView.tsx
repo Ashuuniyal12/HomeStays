@@ -60,10 +60,7 @@ const BillView = ({ bookingId, isAdmin = false, onCheckout, readonly = false, is
                 )}
             </div>
 
-            <div className="flex justify-between text-gray-500 text-sm">
-                <span>Tax (5%)</span>
-                <span>₹{bill.tax.toFixed(2)}</span>
-            </div>
+
 
             <div className="border-t pt-4 mt-4 flex justify-between items-center text-xl font-bold">
                 <span>Total Pay</span>

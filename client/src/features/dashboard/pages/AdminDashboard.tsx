@@ -18,8 +18,8 @@ const AdminDashboard = () => {
             {/* Sidebar */}
             <div className="w-64 bg-white shadow-md">
                 <div className="p-6 border-b">
-                    <h2 className="text-xl font-bold text-blue-600">Homestay Admin</h2>
-                    <p className="text-sm text-gray-500">Welcome, {user?.username}</p>
+                    <h2 className="text-xl font-bold text-blue-600">Laxmi Jawahar Homestay</h2>
+                    <p className="text-sm text-gray-500 mt-2">Welcome, {user?.name}</p>
                 </div>
                 <nav className="mt-6">
                     <NavItem icon={<Home size={20} />} label="Rooms" active={activeTab === 'rooms'} onClick={() => setActiveTab('rooms')} />
