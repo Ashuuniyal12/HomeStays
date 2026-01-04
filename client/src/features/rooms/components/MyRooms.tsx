@@ -47,9 +47,25 @@ const MyRooms: React.FC<MyRoomsProps> = ({ rooms, currentUserId, onEdit, onDelet
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {myRooms.map(room => (
-                <div key={room.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow flex flex-col sm:flex-row group gap-5">
+                <div
+                    key={room.id}
+                    className={`rounded-xl shadow-sm border p-5 hover:shadow-md transition-shadow flex flex-col sm:flex-row group gap-5 relative overflow-hidden
+                        ${room.status === 'CLEANING'
+                            ? 'bg-yellow-50 border-yellow-400 border-2'
+                            : 'bg-white border-gray-100'}`}
+                >
+                    {/* Cleaning Pattern Overlay */}
+                    {room.status === 'CLEANING' && (
+                        <div className="absolute inset-0 pointer-events-none opacity-10"
+                            style={{
+                                backgroundImage: `repeating-linear-gradient(45deg, #000 0, #000 1px, transparent 0, transparent 50%)`,
+                                backgroundSize: '10px 10px'
+                            }}
+                        />
+                    )}
+
                     {/* Left: Info */}
-                    <div className="flex-1">
+                    <div className="flex-1 relative z-10">
                         <div className="flex justify-between items-start">
                             <div>
                                 <div className="flex items-center gap-2 mb-1">
@@ -93,7 +109,7 @@ const MyRooms: React.FC<MyRoomsProps> = ({ rooms, currentUserId, onEdit, onDelet
                     </div>
 
                     {/* Right: Status & Actions */}
-                    <div className="flex flex-row sm:flex-col justify-between items-end min-w-[100px] border-t sm:border-t-0 sm:border-l border-gray-100 pt-4 sm:pt-0 sm:pl-5">
+                    <div className="flex flex-row sm:flex-col justify-between items-end min-w-[100px] border-t sm:border-t-0 sm:border-l border-gray-200 pt-4 sm:pt-0 sm:pl-5 relative z-10">
                         <div className="hidden sm:block text-right">
                             <p className="text-xl font-bold text-blue-600">₹{room.price}</p>
                             <span className={`block mt-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-center
