@@ -46,8 +46,13 @@ const GuestDashboard = () => {
             {/* Sidebar (Desktop) */}
             <aside className="hidden md:flex w-64 bg-white flex-col shadow-lg z-10">
                 <div className="p-8 border-b">
-                    <h1 className="text-2xl font-bold text-blue-600">Homestay</h1>
-                    <p className="text-sm text-gray-400 mt-1">Welcome, {user?.name}</p>
+                    <h1 className="text-2xl font-bold text-blue-600 mb-6">Homestay</h1>
+
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                        <p className="text-xs text-blue-500 uppercase font-bold tracking-wider mb-1">Welcome</p>
+                        <p className="font-bold text-gray-800 text-lg leading-tight">{user?.name}</p>
+                        <p className="text-xs text-gray-500 mt-1 font-mono">ID: {user?.username}</p>
+                    </div>
                 </div>
 
                 <nav className="flex-1 mt-6">
@@ -83,9 +88,15 @@ const GuestDashboard = () => {
 
             {/* Mobile Sidebar */}
             <aside className={`fixed inset-y-0 left-0 w-64 bg-white shadow-xl z-30 transform transition-transform duration-300 md:hidden ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                <div className="p-6 border-b flex justify-between items-center">
-                    <h1 className="text-xl font-bold text-blue-600">Homestay</h1>
-                    <button onClick={() => setIsSidebarOpen(false)} className="text-gray-500"><X size={24} /></button>
+                <div className="p-6 border-b">
+                    <div className="flex justify-between items-center mb-6">
+                        <h1 className="text-xl font-bold text-blue-600">Homestay</h1>
+                        <button onClick={() => setIsSidebarOpen(false)} className="text-gray-500"><X size={24} /></button>
+                    </div>
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                        <p className="text-xs text-blue-500 uppercase font-bold tracking-wider mb-1">Welcome</p>
+                        <p className="font-bold text-gray-800 text-lg leading-tight">{user?.name}</p>
+                    </div>
                 </div>
                 <nav className="mt-4">
                     <NavItem icon={<ShoppingBag size={22} />} label="Dining Menu" id="menu" />

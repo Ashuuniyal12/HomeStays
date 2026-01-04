@@ -70,6 +70,20 @@ export const getActiveBookings = async (req: Request, res: Response) => {
     }
 };
 
+export const getPastBookings = async (req: Request, res: Response) => {
+    try {
+        const bookings = await prisma.booking.findMany({
+            where: { status: { not: 'ACTIVE' } },
+            include: { guest: true, room: true },
+            orderBy: { checkOut: 'desc' },
+            take: 50 // Limit to last 50
+        });
+        res.json(bookings);
+    } catch (err) {
+        res.status(500).json({ error: 'Fetch failed' });
+    }
+};
+
 export const getMyBooking = async (req: AuthRequest, res: Response) => {
     // Requires Auth Middleware
     if (!req.user) return res.status(401).json({ error: 'No token' });
@@ -90,13 +104,39 @@ export const getMyBooking = async (req: AuthRequest, res: Response) => {
 export const checkout = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
-        const booking = await prisma.booking.findUnique({ where: { id } });
+        const booking = await prisma.booking.findUnique({
+            where: { id },
+            include: { room: true } // Include room to get price
+        });
         if (!booking) return res.status(404).json({ error: 'Booking not found' });
 
-        // Complete Booking
+        // Calculate Final Bill
+        // 1. Room Charges
+        const checkIn = new Date(booking.checkIn);
+        const checkOut = booking.checkOut ? new Date(booking.checkOut) : new Date();
+        const diffTime = Math.abs(checkOut.getTime() - checkIn.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+        const roomTotal = diffDays * booking.room.price;
+
+        // 2. Food Orders
+        const orders = await prisma.order.findMany({
+            where: { bookingId: id, status: { not: 'CANCELLED' } }
+        });
+        const foodTotal = orders.reduce((sum, order) => sum + order.total, 0);
+
+        // 3. Tax
+        const tax = (roomTotal + foodTotal) * 0.05;
+        const grandTotal = roomTotal + foodTotal + tax;
+
+        // Complete Booking with Bill Amount
         const updatedBooking = await prisma.booking.update({
             where: { id },
-            data: { status: 'COMPLETED' }
+            data: {
+                status: 'COMPLETED',
+                billAmount: grandTotal, // Save the final amount
+                // Optionally verify checkOut time here if needed
+                checkOut: new Date() // Set actual checkout time
+            }
         });
 
         // Deactivate Guest User
@@ -113,7 +153,62 @@ export const checkout = async (req: Request, res: Response) => {
 
         res.json({ msg: 'Checkout successful', booking: updatedBooking });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ error: 'Checkout failed' });
+    }
+};
+
+export const getEarnings = async (req: Request, res: Response) => {
+    try {
+        const bookings = await prisma.booking.findMany({
+            where: { status: 'COMPLETED' },
+            include: { room: true }
+        });
+
+        const now = new Date();
+        const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+        let weekly = 0;
+        let monthly = 0;
+        let yearly = 0;
+
+        for (const b of bookings) {
+            let amount = b.billAmount;
+
+            // Auto-fix: Calculate if missing
+            if (!amount || amount === 0) {
+                const checkIn = new Date(b.checkIn);
+                const checkOut = b.checkOut ? new Date(b.checkOut) : new Date();
+                const diffTime = Math.abs(checkOut.getTime() - checkIn.getTime());
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+                const roomTotal = diffDays * b.room.price;
+
+                const orders = await prisma.order.findMany({
+                    where: { bookingId: b.id, status: { not: 'CANCELLED' } }
+                });
+                const foodTotal = orders.reduce((sum, order) => sum + order.total, 0);
+                const tax = (roomTotal + foodTotal) * 0.05;
+                amount = roomTotal + foodTotal + tax;
+
+                // Update DB to persist fix
+                await prisma.booking.update({
+                    where: { id: b.id },
+                    data: { billAmount: amount }
+                });
+            }
+
+            const date = new Date(b.checkOut);
+            if (date >= startOfWeek) weekly += amount;
+            if (date >= startOfMonth) monthly += amount;
+            if (date >= startOfYear) yearly += amount;
+        }
+
+        res.json({ weekly, monthly, yearly });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Stats failed' });
     }
 };
 

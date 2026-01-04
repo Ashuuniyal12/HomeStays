@@ -6,9 +6,11 @@ import { toast } from 'react-hot-toast';
 
 const BookingManager = () => {
     const [bookings, setBookings] = useState<any[]>([]);
+    const [historyBookings, setHistoryBookings] = useState<any[]>([]);
     const [rooms, setRooms] = useState<any[]>([]);
     const [showForm, setShowForm] = useState(false);
     const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
+    const [viewMode, setViewMode] = useState<'ACTIVE' | 'HISTORY'>('ACTIVE');
 
     // Form State
     const [formData, setFormData] = useState({
@@ -23,6 +25,7 @@ const BookingManager = () => {
 
     useEffect(() => {
         fetchData();
+        fetchHistory();
     }, []);
 
     const fetchData = async () => {
@@ -33,6 +36,15 @@ const BookingManager = () => {
             ]);
             setBookings(bRes.data);
             setRooms(rRes.data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const fetchHistory = async () => {
+        try {
+            const res = await axios.get('/api/bookings/history');
+            setHistoryBookings(res.data);
         } catch (err) {
             console.error(err);
         }
@@ -59,6 +71,7 @@ const BookingManager = () => {
             toast.success('Check-out successful');
             setSelectedBookingId(null);
             fetchData();
+            fetchHistory();
         } catch (err) {
             toast.error('Checkout failed');
         }
@@ -81,16 +94,32 @@ const BookingManager = () => {
             )}
 
             <div className="mb-6 flex justify-between items-center">
-                <h2 className="text-xl font-bold">Active Bookings</h2>
-                <button
-                    onClick={() => setShowForm(!showForm)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                >
-                    {showForm ? 'Cancel' : 'New Check-in'}
-                </button>
+                <div className="flex space-x-4">
+                    <button
+                        onClick={() => setViewMode('ACTIVE')}
+                        className={`text-xl font-bold pb-1 ${viewMode === 'ACTIVE' ? 'border-b-2 border-blue-600 text-gray-800' : 'text-gray-400'}`}
+                    >
+                        Active Bookings
+                    </button>
+                    <button
+                        onClick={() => setViewMode('HISTORY')}
+                        className={`text-xl font-bold pb-1 ${viewMode === 'HISTORY' ? 'border-b-2 border-blue-600 text-gray-800' : 'text-gray-400'}`}
+                    >
+                        Past Bookings
+                    </button>
+                </div>
+
+                {viewMode === 'ACTIVE' && (
+                    <button
+                        onClick={() => setShowForm(!showForm)}
+                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    >
+                        {showForm ? 'Cancel' : 'New Check-in'}
+                    </button>
+                )}
             </div>
 
-            {showForm && (
+            {showForm && viewMode === 'ACTIVE' && (
                 <div className="bg-white p-6 rounded-lg shadow mb-8 border-l-4 border-blue-500">
                     <h3 className="font-bold text-lg mb-4">Guest Check-in</h3>
                     <form onSubmit={handleCheckIn} className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -154,20 +183,26 @@ const BookingManager = () => {
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guest</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-in</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expected Out</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {viewMode === 'ACTIVE' ? 'Expected Out' : 'Checked Out'}
+                            </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {bookings.map(booking => (
+                        {(viewMode === 'ACTIVE' ? bookings : historyBookings).map(booking => (
                             <tr key={booking.id}>
                                 <td className="px-6 py-4 whitespace-nowrap font-bold text-gray-900">
                                     {booking.room?.number || booking.roomId}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     {booking.guest?.name}
-                                    <div className="text-xs text-gray-500">User: <span className="font-mono text-gray-700">{booking.guest?.username}</span></div>
-                                    <div className="text-xs text-gray-500">Pass: <span className="font-mono text-gray-700">{booking.plainPassword || '****'}</span></div>
+                                    {viewMode === 'ACTIVE' && (
+                                        <>
+                                            <div className="text-xs text-gray-500">User: <span className="font-mono text-gray-700">{booking.guest?.username}</span></div>
+                                            <div className="text-xs text-gray-500">Pass: <span className="font-mono text-gray-700">{booking.plainPassword || '****'}</span></div>
+                                        </>
+                                    )}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {new Date(booking.checkIn).toLocaleDateString()}
@@ -187,7 +222,11 @@ const BookingManager = () => {
                         ))}
                     </tbody>
                 </table>
-                {bookings.length === 0 && <div className="p-6 text-center text-gray-500">No active bookings</div>}
+                {(viewMode === 'ACTIVE' ? bookings : historyBookings).length === 0 && (
+                    <div className="p-6 text-center text-gray-500">
+                        {viewMode === 'ACTIVE' ? 'No active bookings' : 'No past bookings found'}
+                    </div>
+                )}
             </div>
 
             {selectedBookingId && (
@@ -203,6 +242,7 @@ const BookingManager = () => {
                             bookingId={selectedBookingId}
                             isAdmin={true}
                             onCheckout={() => handleCheckOut(selectedBookingId)}
+                            readonly={viewMode === 'HISTORY'}
                         />
                     </div>
                 </div>

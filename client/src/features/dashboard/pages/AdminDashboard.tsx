@@ -7,7 +7,7 @@ import RoomManager from '../../rooms/components/RoomManager';
 import BookingManager from '../../bookings/components/BookingManager';
 import KitchenOrders from '../../orders/components/KitchenOrders';
 import MenuManager from '../../menu/components/MenuManager';
-import BillingManager from '../../billing/components/BillingManager';
+import BillingManager from '../../billing/components/BillingDashboard';
 
 const AdminDashboard = () => {
     const { logout, user } = useAuth();

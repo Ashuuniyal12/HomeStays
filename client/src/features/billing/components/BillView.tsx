@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 
-const BillView = ({ bookingId, isAdmin = false, onCheckout }: { bookingId: string, isAdmin?: boolean, onCheckout?: () => void }) => {
+const BillView = ({ bookingId, isAdmin = false, onCheckout, readonly = false }: { bookingId: string, isAdmin?: boolean, onCheckout?: () => void, readonly?: boolean }) => {
     const [bill, setBill] = useState<any>(null);
 
     useEffect(() => {
@@ -53,13 +53,17 @@ const BillView = ({ bookingId, isAdmin = false, onCheckout }: { bookingId: strin
                 <span className="text-blue-600">₹{bill.grandTotal.toFixed(2)}</span>
             </div>
 
-            {isAdmin ? (
+            {isAdmin && !readonly ? (
                 <button
                     onClick={onCheckout}
                     className="w-full bg-green-600 text-white py-3 rounded-lg font-bold mt-6 hover:bg-green-700"
                 >
                     Confirm Payment & Checkout
                 </button>
+            ) : isAdmin && readonly ? (
+                <div className="w-full bg-gray-100 text-gray-500 py-3 rounded-lg font-bold mt-6 text-center border">
+                    Bill Settled (Read Only)
+                </div>
             ) : (
                 <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold mt-6 opacity-50 cursor-not-allowed">
                     Request Checkout (Visit Desk)
@@ -68,5 +72,6 @@ const BillView = ({ bookingId, isAdmin = false, onCheckout }: { bookingId: strin
         </div>
     );
 };
+
 
 export default BillView;
