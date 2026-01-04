@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import { useAuth } from '../../auth/auth.store';
 import RoomGantt from './RoomGantt';
 import MyRooms from './MyRooms';
+import Loader from '../../../utils/Loader';
 
 const RoomManager = () => {
     const { user } = useAuth();
@@ -11,8 +12,11 @@ const RoomManager = () => {
     const [isAdding, setIsAdding] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editRoomData, setEditRoomData] = useState<any>(null);
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    // New Room State
     const [newRoom, setNewRoom] = useState({
-        number: '', type: 'Standard', price: '', occupancy: '',
+        number: '', type: 'Standard', price: '', occupancy: '', description: '',
         hasBalcony: false, isAC: false, bathroomCount: '1'
     });
 
@@ -34,17 +38,20 @@ const RoomManager = () => {
 
     const handleAddRoom = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsProcessing(true);
         try {
             await axios.post('/api/rooms', newRoom);
             setIsAdding(false);
             toast.success('Room added successfully');
             setNewRoom({
-                number: '', type: 'Standard', price: '', occupancy: '',
+                number: '', type: 'Standard', price: '', occupancy: '', description: '',
                 hasBalcony: false, isAC: false, bathroomCount: '1'
             });
             fetchRooms();
         } catch (err: any) {
             toast.error('Failed to add room: ' + (err.response?.data?.details || err.message));
+        } finally {
+            setIsProcessing(false);
         }
     };
 
@@ -56,6 +63,7 @@ const RoomManager = () => {
     const handleSaveEdit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editRoomData) return;
+        setIsProcessing(true);
         try {
             await axios.put(`/api/rooms/${editRoomData.id}`, {
                 ...editRoomData,
@@ -68,16 +76,21 @@ const RoomManager = () => {
             fetchRooms();
         } catch (err: any) {
             toast.error('Failed to update room: ' + (err.response?.data?.details || err.message));
+        } finally {
+            setIsProcessing(false);
         }
     };
 
     const handleDeleteRoom = async (id: number) => {
+        setIsProcessing(true);
         try {
             await axios.delete(`/api/rooms/${id}`);
             toast.success('Room deleted successfully');
             fetchRooms();
         } catch (err: any) {
             toast.error('Failed to delete room: ' + (err.response?.data?.error || err.message));
+        } finally {
+            setIsProcessing(false);
         }
     };
 
@@ -90,59 +103,20 @@ const RoomManager = () => {
 
     return (
         <div className="space-y-8">
-            {/* Header / Actions */}
-            <div className="flex justify-end items-end">
-                <div className="space-x-4">
-                    <button onClick={() => setIsAdding(!isAdding)} className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700">
-                        {isAdding ? 'Cancel' : '+ Add New Room'}
-                    </button>
-                </div>
-            </div>
-
-            {/* Add Room Form */}
-            {isAdding && (
-                <div className="bg-white p-6 rounded-lg shadow border animate-fade-in">
-                    <h3 className="text-lg font-bold mb-4">Add New Room</h3>
-                    <form onSubmit={handleAddRoom} className="grid grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-                        <div>
-                            <label className="block text-sm font-bold mb-1">Room Number</label>
-                            <input required type="text" className="w-full border p-2 rounded" value={newRoom.number} onChange={e => setNewRoom({ ...newRoom, number: e.target.value })} />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-bold mb-1">Type</label>
-                            <select className="w-full border p-2 rounded" value={newRoom.type} onChange={e => setNewRoom({ ...newRoom, type: e.target.value })}>
-                                <option value="Standard">Standard</option>
-                                <option value="Deluxe">Deluxe</option>
-                                <option value="Suite">Suite</option>
-                                <option value="Family">Family</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-bold mb-1">Price (₹)</label>
-                            <input required type="number" className="w-full border p-2 rounded" value={newRoom.price} onChange={e => setNewRoom({ ...newRoom, price: e.target.value })} />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-bold mb-1">Occupancy</label>
-                            <input required type="number" className="w-full border p-2 rounded" value={newRoom.occupancy} onChange={e => setNewRoom({ ...newRoom, occupancy: e.target.value })} />
-                        </div>
-
-                        {/* New Fields */}
-                        <div className="flex items-center space-x-2 pt-4">
-                            <input type="checkbox" id="addHasBalcony" className="w-4 h-4" checked={newRoom.hasBalcony} onChange={e => setNewRoom({ ...newRoom, hasBalcony: e.target.checked })} />
-                            <label htmlFor="addHasBalcony" className="text-sm font-bold">Balcony</label>
-                        </div>
-                        <div className="flex items-center space-x-2 pt-4">
-                            <input type="checkbox" id="addIsAC" className="w-4 h-4" checked={newRoom.isAC} onChange={e => setNewRoom({ ...newRoom, isAC: e.target.checked })} />
-                            <label htmlFor="addIsAC" className="text-sm font-bold">AC</label>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-bold mb-1">Bathrooms</label>
-                            <input required type="number" min="1" className="w-full border p-2 rounded" value={newRoom.bathroomCount} onChange={e => setNewRoom({ ...newRoom, bathroomCount: e.target.value })} />
-                        </div>
-                        <button type="submit" className="bg-green-600 text-white py-2 rounded font-bold hover:bg-green-700">Save Room</button>
-                    </form>
+            {/* Loader Modal */}
+            {isProcessing && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-[70] backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center animate-in zoom-in-95 duration-200">
+                        <Loader size={48} className="text-blue-600 mb-4" />
+                        <h3 className="text-lg font-bold text-gray-800">Processing...</h3>
+                        <p className="text-gray-500 text-sm mt-1">Please wait a moment.</p>
+                    </div>
                 </div>
             )}
+
+
+
+
 
             {/* Gantt Chart Section */}
             <section className="space-y-4">
@@ -159,13 +133,80 @@ const RoomManager = () => {
 
             {/* My Rooms Section */}
             <section className="space-y-4">
-                <h3 className="text-xl font-semibold">My Rooms</h3>
+                <div className="flex justify-between items-center">
+                    <h3 className="text-xl font-semibold">My Rooms</h3>
+                    <button onClick={() => setIsAdding(!isAdding)} className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700">
+                        {isAdding ? 'Cancel' : '+ Add New Room'}
+                    </button>
+                </div>
+
+                {/* Add Room Form */}
+                {isAdding && (
+                    <div className="bg-white p-6 rounded-lg shadow border animate-fade-in">
+                        <h3 className="text-lg font-bold mb-4">Add New Room</h3>
+                        <form onSubmit={handleAddRoom} className="space-y-4">
+                            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 items-start">
+                                <div className="lg:col-span-1">
+                                    <label className="block text-sm font-bold mb-1">Room Number</label>
+                                    <input required type="text" className="w-full border p-2 rounded" value={newRoom.number} onChange={e => setNewRoom({ ...newRoom, number: e.target.value })} />
+                                </div>
+                                <div className="lg:col-span-1">
+                                    <label className="block text-sm font-bold mb-1">Type</label>
+                                    <select className="w-full border p-2 rounded" value={newRoom.type} onChange={e => setNewRoom({ ...newRoom, type: e.target.value })}>
+                                        <option value="Standard">Standard</option>
+                                        <option value="Deluxe">Deluxe</option>
+                                        <option value="Suite">Suite</option>
+                                        <option value="Family">Family</option>
+                                    </select>
+                                </div>
+                                <div className="lg:col-span-1">
+                                    <label className="block text-sm font-bold mb-1">Price (₹)</label>
+                                    <input required type="number" className="w-full border p-2 rounded" value={newRoom.price} onChange={e => setNewRoom({ ...newRoom, price: e.target.value })} />
+                                </div>
+                                <div className="lg:col-span-1">
+                                    <label className="block text-sm font-bold mb-1">Occupancy</label>
+                                    <input required type="number" className="w-full border p-2 rounded" value={newRoom.occupancy} onChange={e => setNewRoom({ ...newRoom, occupancy: e.target.value })} />
+                                </div>
+                                <div className="lg:col-span-1">
+                                    <label className="block text-sm font-bold mb-1">Bathrooms</label>
+                                    <input required type="number" min="1" className="w-full border p-2 rounded" value={newRoom.bathroomCount} onChange={e => setNewRoom({ ...newRoom, bathroomCount: e.target.value })} />
+                                </div>
+                            </div>
+
+                            {/* Description */}
+                            <div>
+                                <label className="block text-sm font-bold mb-1">Description</label>
+                                <textarea
+                                    className="w-full border p-2 rounded resize-none focus:ring-2 focus:ring-blue-500 outline-none"
+                                    rows={2}
+                                    value={newRoom.description}
+                                    onChange={e => setNewRoom({ ...newRoom, description: e.target.value })}
+                                    placeholder="E.g. Sea view, corner room on 2nd floor, newly renovated..."
+                                />
+                            </div>
+
+                            {/* Amenities Checkboxes */}
+                            <div className="flex gap-6 border-t pt-4">
+                                <div className="flex items-center space-x-2">
+                                    <input type="checkbox" id="addHasBalcony" className="w-4 h-4" checked={newRoom.hasBalcony} onChange={e => setNewRoom({ ...newRoom, hasBalcony: e.target.checked })} />
+                                    <label htmlFor="addHasBalcony" className="text-sm font-bold">Balcony</label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <input type="checkbox" id="addIsAC" className="w-4 h-4" checked={newRoom.isAC} onChange={e => setNewRoom({ ...newRoom, isAC: e.target.checked })} />
+                                    <label htmlFor="addIsAC" className="text-sm font-bold">AC</label>
+                                </div>
+                                <button type="submit" className="ml-auto bg-green-600 text-white px-6 py-2 rounded font-bold hover:bg-green-700">Save Room</button>
+                            </div>
+                        </form>
+                    </div>
+                )}
+
                 {user && <MyRooms rooms={rooms} currentUserId={user.id} onEdit={handleEditRoom} onDelete={handleDeleteRoom} />}
             </section>
 
             {/* Edit Room Modal */}
             {isEditing && editRoomData && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
                         <h3 className="text-lg font-bold mb-4">Edit Room {editRoomData.number}</h3>
                         <form onSubmit={handleSaveEdit} className="space-y-4">
@@ -173,6 +214,17 @@ const RoomManager = () => {
                                 <label className="block text-sm font-bold mb-1">Room Number</label>
                                 <input required type="text" className="w-full border p-2 rounded" value={editRoomData.number} onChange={e => setEditRoomData({ ...editRoomData, number: e.target.value })} />
                             </div>
+
+                            <div>
+                                <label className="block text-sm font-bold mb-1">Description</label>
+                                <textarea
+                                    className="w-full border p-2 rounded resize-none focus:ring-2 focus:ring-blue-500 outline-none"
+                                    rows={2}
+                                    value={editRoomData.description || ''}
+                                    onChange={e => setEditRoomData({ ...editRoomData, description: e.target.value })}
+                                />
+                            </div>
+
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-bold mb-1">Type</label>

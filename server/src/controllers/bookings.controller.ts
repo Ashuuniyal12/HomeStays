@@ -229,11 +229,28 @@ export const getBill = async (req: Request, res: Response) => {
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
         const roomTotal = diffDays * booking.room.price;
 
-        // 2. Calculate Food Orders
+        // 2. Calculate Food Orders with Details
         const orders = await prisma.order.findMany({
-            where: { bookingId: id, status: { not: 'CANCELLED' } }
+            where: { bookingId: id, status: { not: 'CANCELLED' } },
+            include: {
+                items: {
+                    include: { menuItem: true }
+                }
+            }
         });
+
         const foodTotal = orders.reduce((sum, order) => sum + order.total, 0);
+
+        // Flatten items for display
+        const foodItems = orders.flatMap(order =>
+            order.items.map(item => ({
+                name: item.menuItem.name,
+                quantity: item.quantity,
+                price: item.price,
+                total: item.price * item.quantity,
+                orderDate: order.createdAt
+            }))
+        );
 
         // 3. Tax (example 5%)
         const tax = (roomTotal + foodTotal) * 0.05;
@@ -246,7 +263,8 @@ export const getBill = async (req: Request, res: Response) => {
             breakdown: {
                 days: diffDays,
                 roomRate: booking.room.price,
-                ordersCount: orders.length
+                ordersCount: orders.length,
+                foodItems // Send detailed items
             }
         });
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 
-const BillView = ({ bookingId, isAdmin = false, onCheckout, readonly = false }: { bookingId: string, isAdmin?: boolean, onCheckout?: () => void, readonly?: boolean }) => {
+const BillView = ({ bookingId, isAdmin = false, onCheckout, readonly = false, isProcessing = false }: { bookingId: string, isAdmin?: boolean, onCheckout?: () => void, readonly?: boolean, isProcessing?: boolean }) => {
     const [bill, setBill] = useState<any>(null);
 
     useEffect(() => {
@@ -39,10 +39,27 @@ const BillView = ({ bookingId, isAdmin = false, onCheckout, readonly = false }: 
                 <span>Room Charges ({bill.breakdown.days} days)</span>
                 <span>₹{bill.roomTotal}</span>
             </div>
-            <div className="flex justify-between">
-                <span>Food & Beverages</span>
-                <span>₹{bill.foodTotal}</span>
+
+            {/* Food Breakup */}
+            <div className="border-t border-b py-2 my-2">
+                <div className="flex justify-between font-medium mb-2">
+                    <span>Food & Beverages</span>
+                    <span>₹{bill.foodTotal}</span>
+                </div>
+                {bill.breakdown.foodItems && bill.breakdown.foodItems.length > 0 ? (
+                    <div className="max-h-40 overflow-y-auto bg-gray-50 p-2 rounded text-sm space-y-1 custom-scrollbar">
+                        {bill.breakdown.foodItems.map((item: any, idx: number) => (
+                            <div key={idx} className="flex justify-between text-gray-600">
+                                <span>{item.name} <span className="text-gray-400 text-xs">x{item.quantity}</span></span>
+                                <span>₹{item.total}</span>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-xs text-center text-gray-400 italic">No food items ordered</p>
+                )}
             </div>
+
             <div className="flex justify-between text-gray-500 text-sm">
                 <span>Tax (5%)</span>
                 <span>₹{bill.tax.toFixed(2)}</span>
@@ -55,10 +72,17 @@ const BillView = ({ bookingId, isAdmin = false, onCheckout, readonly = false }: 
 
             {isAdmin && !readonly ? (
                 <button
-                    onClick={onCheckout}
-                    className="w-full bg-green-600 text-white py-3 rounded-lg font-bold mt-6 hover:bg-green-700"
+                    type="button"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (onCheckout) onCheckout();
+                    }}
+                    disabled={isProcessing}
+                    className={`w-full py-3 rounded-lg font-bold mt-6 transition-colors flex justify-center items-center gap-2
+                        ${isProcessing ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white'}`}
                 >
-                    Confirm Payment & Checkout
+                    {isProcessing ? 'Processing Checkout...' : 'Confirm Payment & Checkout'}
                 </button>
             ) : isAdmin && readonly ? (
                 <div className="w-full bg-gray-100 text-gray-500 py-3 rounded-lg font-bold mt-6 text-center border">

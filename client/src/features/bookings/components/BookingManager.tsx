@@ -3,6 +3,7 @@ import axios from 'axios';
 
 import BillView from '../../billing/components/BillView';
 import { toast } from 'react-hot-toast';
+import Loader from '../../../utils/Loader';
 
 const BookingManager = () => {
     const [bookings, setBookings] = useState<any[]>([]);
@@ -11,6 +12,7 @@ const BookingManager = () => {
     const [showForm, setShowForm] = useState(false);
     const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'ACTIVE' | 'HISTORY'>('ACTIVE');
+    const [isProcessing, setIsProcessing] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -52,6 +54,7 @@ const BookingManager = () => {
 
     const handleCheckIn = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsProcessing(true);
         try {
             const res = await axios.post('/api/bookings', formData);
             setNewGuestCreds(res.data.credentials);
@@ -61,24 +64,44 @@ const BookingManager = () => {
             setFormData({ roomId: '', guestName: '', checkInDate: '', expectedCheckOutDate: '' });
         } catch (err) {
             toast.error('Check-in failed');
+        } finally {
+            setIsProcessing(false);
         }
     };
 
     const handleCheckOut = async (id: string) => {
-        if (!confirm('Confirm Check-out?')) return;
+        // Confirm implied by the button "Confirm Payment"
+        setIsProcessing(true);
         try {
             await axios.post(`/api/bookings/${id}/checkout`);
             toast.success('Check-out successful');
             setSelectedBookingId(null);
             fetchData();
             fetchHistory();
-        } catch (err) {
-            toast.error('Checkout failed');
+        } catch (err: any) {
+            console.error(err);
+            toast.error('Checkout failed: ' + (err.response?.data?.error || err.message));
+        } finally {
+            setIsProcessing(false);
         }
     };
 
     return (
         <div>
+            {/* Processing Loader Modal */}
+            {isProcessing && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-[70] backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center animate-in zoom-in-95 duration-200">
+                        <Loader size={48} className="text-blue-600 mb-4" />
+                        <h3 className="text-lg font-bold text-gray-800">Processing...</h3>
+                        <p className="text-gray-500 text-sm mt-1">Finalizing bill & checkout...</p>
+                    </div>
+                </div>
+            )}
+
+            {/* remainder of file... */}
+
+
             {newGuestCreds && (
                 <div className="mb-6 bg-green-100 border border-green-400 text-green-700 p-4 rounded relative">
                     <strong className="font-bold">Check-in Successful!</strong>
@@ -243,6 +266,7 @@ const BookingManager = () => {
                             isAdmin={true}
                             onCheckout={() => handleCheckOut(selectedBookingId)}
                             readonly={viewMode === 'HISTORY'}
+                            isProcessing={isProcessing}
                         />
                     </div>
                 </div>

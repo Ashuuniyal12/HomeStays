@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { CreditCard, DollarSign, Calendar, TrendingUp } from 'lucide-react';
 import BillView from './BillView';
+import { toast } from 'react-hot-toast';
+import Loader from '../../../utils/Loader';
 
 const BillingDashboard = () => {
     const [stats, setStats] = useState({ weekly: 0, monthly: 0, yearly: 0 });
@@ -9,6 +11,7 @@ const BillingDashboard = () => {
     const [historyBookings, setHistoryBookings] = useState<any[]>([]);
     const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'ACTIVE' | 'HISTORY'>('ACTIVE'); // For modal logic if needed, mostly just distinct lists
+    const [isProcessing, setIsProcessing] = useState(false);
 
     useEffect(() => {
         fetchEarnings();
@@ -37,8 +40,34 @@ const BillingDashboard = () => {
         }
     };
 
+    const handleCheckOut = async (id: string) => {
+        setIsProcessing(true);
+        try {
+            await axios.post(`/api/bookings/${id}/checkout`);
+            toast.success('Check-out successful');
+            setSelectedBookingId(null);
+            await Promise.all([fetchEarnings(), fetchBookings()]);
+        } catch (err: any) {
+            console.error(err);
+            toast.error('Checkout failed: ' + (err.response?.data?.error || err.message));
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     return (
         <div className="space-y-8">
+            {/* Loader Modal */}
+            {isProcessing && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-[70] backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center animate-in zoom-in-95 duration-200">
+                        <Loader size={48} className="text-blue-600 mb-4" />
+                        <h3 className="text-lg font-bold text-gray-800">Processing...</h3>
+                        <p className="text-gray-500 text-sm mt-1">Finalizing bill & checkout...</p>
+                    </div>
+                </div>
+            )}
+
             {/* Top Section: Earnings */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg">
@@ -200,11 +229,8 @@ const BillingDashboard = () => {
                             bookingId={selectedBookingId}
                             isAdmin={true}
                             readonly={viewMode === 'HISTORY'}
-                            onCheckout={async () => {
-                                // Refresh data after checkout
-                                setSelectedBookingId(null);
-                                await Promise.all([fetchEarnings(), fetchBookings()]);
-                            }}
+                            onCheckout={() => handleCheckOut(selectedBookingId)}
+                            isProcessing={isProcessing}
                         />
                     </div>
                 </div>
@@ -212,5 +238,4 @@ const BillingDashboard = () => {
         </div>
     );
 };
-
 export default BillingDashboard;

@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import BillView from './BillView';
 import { toast } from 'react-hot-toast';
+import Loader from '../../../utils/Loader';
 
 const BillingManager = () => {
     const [bookings, setBookings] = useState<any[]>([]);
     const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
     const [billSummaries, setBillSummaries] = useState<Record<string, number>>({});
+    const [isProcessing, setIsProcessing] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -37,7 +39,7 @@ const BillingManager = () => {
     };
 
     const handleCheckOut = async (id: string) => {
-        if (!confirm('Confirm Payment & Check-out?')) return;
+        setIsProcessing(true);
         try {
             await axios.post(`/api/bookings/${id}/checkout`);
             toast.success('Payment confirmed & Checked out');
@@ -45,11 +47,24 @@ const BillingManager = () => {
             fetchData();
         } catch (err) {
             toast.error('Checkout failed');
+        } finally {
+            setIsProcessing(false);
         }
     };
 
     return (
         <div>
+            {/* Loader Modal */}
+            {isProcessing && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-[70] backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center animate-in zoom-in-95 duration-200">
+                        <Loader size={48} className="text-blue-600 mb-4" />
+                        <h3 className="text-lg font-bold text-gray-800">Processing...</h3>
+                        <p className="text-gray-500 text-sm mt-1">Finalizing bill & checkout...</p>
+                    </div>
+                </div>
+            )}
+
             <div className="bg-white rounded-lg shadow overflow-hidden">
                 <table className="min-w-full">
                     <thead className="bg-gray-50">
@@ -105,6 +120,7 @@ const BillingManager = () => {
                             bookingId={selectedBookingId}
                             isAdmin={true}
                             onCheckout={() => handleCheckOut(selectedBookingId)}
+                            isProcessing={isProcessing}
                         />
                     </div>
                 </div>

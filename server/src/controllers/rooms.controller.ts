@@ -34,7 +34,7 @@ export const getRooms = async (req: AuthRequest, res: Response) => {
 };
 
 export const createRoom = async (req: AuthRequest, res: Response) => {
-    const { number, type, occupancy, price } = req.body;
+    const { number, type, description, occupancy, price } = req.body;
 
     if (!number || !type || !occupancy || !price) {
         return res.status(400).json({ error: 'Missing required fields', details: 'Number, Type, Occupancy and Price are required' });
@@ -51,7 +51,7 @@ export const createRoom = async (req: AuthRequest, res: Response) => {
         const ownerId = req.user?.id;
         const room = await prisma.room.create({
             data: {
-                number, type, occupancy: occInt, price: priceFloat,
+                number, type, description, occupancy: occInt, price: priceFloat,
                 status: 'AVAILABLE',
                 ownerId // Save the creator
             } as any
@@ -78,7 +78,7 @@ export const updateRoomStatus = async (req: Request, res: Response) => {
 
 export const updateRoom = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
-    const { number, type, occupancy, price, status, hasBalcony, bathroomCount, isAC } = req.body;
+    const { number, type, description, occupancy, price, status, hasBalcony, bathroomCount, isAC } = req.body;
 
     try {
         const existing = await prisma.room.findUnique({ where: { id: parseInt(id) } });
@@ -91,7 +91,7 @@ export const updateRoom = async (req: AuthRequest, res: Response) => {
         const room = await prisma.room.update({
             where: { id: parseInt(id) },
             data: {
-                number, type, status,
+                number, type, description, status,
                 occupancy: parseInt(occupancy),
                 price: parseFloat(price),
                 hasBalcony: hasBalcony !== undefined ? Boolean(hasBalcony) : undefined,

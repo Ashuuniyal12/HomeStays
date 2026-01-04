@@ -45,70 +45,91 @@ const MyRooms: React.FC<MyRoomsProps> = ({ rooms, currentUserId, onEdit, onDelet
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {myRooms.map(room => (
-                <div key={room.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow relative group">
-                    {/* Header */}
-                    <div className="flex justify-between items-start mb-2 ">
-                        <div>
-                            <h3 className="text-2xl font-bold text-gray-800">{room.number}</h3>
-                            <p className={`text-xs font-semibold px-2.5 py-1 rounded-md border mt-1 inline-block ${getRoomTypeColor(room.type)}`}>
-                                {room.type}
-                            </p>
+                <div key={room.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow flex flex-col sm:flex-row group gap-5">
+                    {/* Left: Info */}
+                    <div className="flex-1">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <h3 className="text-xl font-bold text-gray-800">Room {room.number}</h3>
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${getRoomTypeColor(room.type)}`}>
+                                        {room.type}
+                                    </span>
+                                </div>
+                                <p className="text-gray-500 text-sm line-clamp-2 min-h-[40px]">
+                                    {(room as any).description || `A spacious ${room.type.toLowerCase()} room with modern amenities.`}
+                                </p>
+                            </div>
+                            <div className="text-right sm:hidden">
+                                <p className="text-lg font-bold text-blue-600">₹{room.price}</p>
+                            </div>
                         </div>
-                        <div className="text-right">
-                            <p className="text-lg font-bold text-blue-600">₹{room.price}</p>
-                            <span className={`px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full mt-1 inline-block
-                                ${room.status === 'AVAILABLE' ? 'bg-green-50 text-green-700 border border-green-200' :
-                                    room.status === 'OCCUPIED' ? 'bg-red-50 text-red-700 border border-red-200' :
-                                        'bg-yellow-50 text-yellow-700 border border-yellow-200'}`}>
+
+                        {/* Amenities Grid */}
+                        <div className="flex flex-wrap gap-3 mt-4 text-sm text-gray-600">
+                            <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md" title="Occupancy">
+                                <Users size={14} className="text-gray-400" />
+                                <span className="font-medium">{room.occupancy}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md" title="Bathrooms">
+                                <Bath size={14} className="text-gray-400" />
+                                <span className="font-medium">{(room as any).bathroomCount || 1}</span>
+                            </div>
+                            {(room as any).hasBalcony && (
+                                <div className="flex items-center gap-1.5 bg-blue-50 text-blue-700 px-2 py-1 rounded-md">
+                                    <Mountain size={14} />
+                                    <span className="font-medium text-xs">Balcony</span>
+                                </div>
+                            )}
+                            {(room as any).isAC && (
+                                <div className="flex items-center gap-1.5 bg-blue-50 text-blue-700 px-2 py-1 rounded-md">
+                                    <Wind size={14} />
+                                    <span className="font-medium text-xs">AC</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Right: Status & Actions */}
+                    <div className="flex flex-row sm:flex-col justify-between items-end min-w-[100px] border-t sm:border-t-0 sm:border-l border-gray-100 pt-4 sm:pt-0 sm:pl-5">
+                        <div className="hidden sm:block text-right">
+                            <p className="text-xl font-bold text-blue-600">₹{room.price}</p>
+                            <span className={`block mt-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-center
+                                ${room.status === 'AVAILABLE' ? 'bg-green-100 text-green-700' :
+                                    room.status === 'OCCUPIED' ? 'bg-red-100 text-red-700' :
+                                        'bg-yellow-100 text-yellow-700'}`}>
                                 {room.status}
                             </span>
                         </div>
-                    </div>
 
-                    {/* Amenities */}
-                    <div className="flex space-x-4 my-4 text-gray-600 text-sm border-t border-b py-3 border-gray-50 bg-gray-50/50 -mx-5 px-5">
-                        <div className="flex items-center space-x-1.5" title="Occupancy">
-                            <Users size={16} className="text-gray-400" />
-                            <span className="font-medium">{room.occupancy} <span className="text-xs text-gray-400 font-normal">Guests</span></span>
-                        </div>
-                        <div className="flex items-center space-x-1.5" title="Bathrooms">
-                            <Bath size={16} className="text-gray-400" />
-                            <span className="font-medium">{(room as any).bathroomCount || 1} <span className="text-xs text-gray-400 font-normal">Baths</span></span>
-                        </div>
-                        {(room as any).hasBalcony && (
-                            <div className="flex items-center space-x-1.5 text-blue-600" title="Balcony">
-                                <Mountain size={16} />
-                                <span className="xs:hidden font-medium">Balcony</span>
-                            </div>
-                        )}
-                        {(room as any).isAC && (
-                            <div className="flex items-center space-x-1.5 text-blue-600" title="AC">
-                                <Wind size={16} />
-                                <span className="xs:hidden font-medium">AC</span>
-                            </div>
-                        )}
-                    </div>
+                        {/* Mobile Status */}
+                        <span className={`sm:hidden text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full
+                                ${room.status === 'AVAILABLE' ? 'bg-green-100 text-green-700' :
+                                room.status === 'OCCUPIED' ? 'bg-red-100 text-red-700' :
+                                    'bg-yellow-100 text-yellow-700'}`}>
+                            {room.status}
+                        </span>
 
-                    {/* Actions */}
-                    <div className="flex justify-end space-x-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                            onClick={() => onEdit(room)}
-                            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                            title="Edit"
-                        >
-                            <Pencil size={18} />
-                        </button>
-                        <button
-                            onClick={() => {
-                                if (confirm('Are you sure you want to delete this room?')) onDelete(room.id);
-                            }}
-                            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                            title="Delete"
-                        >
-                            <Trash2 size={18} />
-                        </button>
+                        <div className="flex gap-2 mt-auto">
+                            <button
+                                onClick={() => onEdit(room)}
+                                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="Edit"
+                            >
+                                <Pencil size={18} />
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (confirm('Are you sure you want to delete this room?')) onDelete(room.id);
+                                }}
+                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Delete"
+                            >
+                                <Trash2 size={18} />
+                            </button>
+                        </div>
                     </div>
                 </div>
             ))}
