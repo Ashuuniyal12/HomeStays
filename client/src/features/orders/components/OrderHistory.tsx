@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { ChefHat, CheckCircle, Clock } from 'lucide-react';
 import { io } from 'socket.io-client';
+import { toast } from 'react-hot-toast';
 
 interface OrderHistoryProps {
     bookingId: string;
@@ -11,6 +12,13 @@ interface OrderHistoryProps {
 const OrderHistory = ({ bookingId }: { bookingId: string }) => {
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+
+    const ordersRef = useRef(orders);
+
+    // Keep ref in sync
+    useEffect(() => {
+        ordersRef.current = orders;
+    }, [orders]);
 
     useEffect(() => {
         const fetchOrders = async () => {
@@ -28,10 +36,21 @@ const OrderHistory = ({ bookingId }: { bookingId: string }) => {
 
         const socket = io();
         socket.on(`order:${bookingId}`, (updatedOrder: any) => {
+            const currentOrders = ordersRef.current;
+            const exists = currentOrders.find(o => o.id === updatedOrder.id);
+
+            // Side effects
+            if (exists && exists.status !== updatedOrder.status) {
+                try {
+                    const audio = new Audio('/sounds/oredre-reciebed.wav');
+                    audio.play().catch(e => console.log('Audio play blocked:', e));
+                } catch (e) { console.error(e); }
+                toast.success(`Order Status Updated: ${updatedOrder.status}`, { id: `order-update-${updatedOrder.id}-${updatedOrder.status}` });
+            }
+
             setOrders(prev => {
-                const exists = prev.find(o => o.id === updatedOrder.id);
                 let newOrders;
-                if (exists) {
+                if (prev.some(o => o.id === updatedOrder.id)) {
                     newOrders = prev.map(o => o.id === updatedOrder.id ? updatedOrder : o);
                 } else {
                     newOrders = [updatedOrder, ...prev];
@@ -41,6 +60,7 @@ const OrderHistory = ({ bookingId }: { bookingId: string }) => {
         });
 
         return () => {
+            socket.off(`order:${bookingId}`);
             socket.disconnect();
         };
     }, [bookingId]);

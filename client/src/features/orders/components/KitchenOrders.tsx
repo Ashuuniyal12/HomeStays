@@ -36,10 +36,18 @@ const KitchenOrders = () => {
 
         // Listen for new orders
         socket.on('order:new', (newOrder: Order) => {
+            // Side effects (Audio/Toast) should be outside state setter
+            // Play sound
+            try {
+                const audio = new Audio('/sounds/oredre-reciebed.wav');
+                audio.play().catch(e => console.log('Audio play blocked:', e));
+            } catch (e) {
+                console.error('Audio setup failed', e);
+            }
+            toast('New Order Received!', { icon: '🔔', id: `new-order-${newOrder.id}` });
+
             setOrders(prev => {
                 if (prev.some(o => o.id === newOrder.id)) return prev;
-                // Play sound or toast here
-                toast('New Order Received!', { icon: '🔔' });
                 return [newOrder, ...prev];
             });
         });

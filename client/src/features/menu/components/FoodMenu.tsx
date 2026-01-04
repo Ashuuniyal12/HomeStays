@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import Loader from '../../../utils/Loader';
 
 const FoodMenu = ({ bookingId }: { bookingId: string }) => {
     const [menu, setMenu] = useState<any[]>([]);
     const [cart, setCart] = useState<any>({});
     const [categories, setCategories] = useState<string[]>([]);
     const [activeCategory, setActiveCategory] = useState<string>('All');
+    const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
     useEffect(() => {
         axios.get('/api/menu').then(res => {
@@ -33,12 +35,25 @@ const FoodMenu = ({ bookingId }: { bookingId: string }) => {
         const items = Object.entries(cart).map(([menuItemId, quantity]) => ({ menuItemId: parseInt(menuItemId), quantity }));
         if (items.length === 0) return;
 
+        setIsPlacingOrder(true);
+
         try {
             await axios.post('/api/orders', { bookingId, items });
+
+            // Play confirmation sound
+            try {
+                const audio = new Audio('/sounds/request-confirmataion.wav');
+                audio.play().catch(e => console.log('Audio play blocked:', e));
+            } catch (e) {
+                console.error('Audio setup failed', e);
+            }
+
             toast.success('Order Placed! The kitchen is preparing your food.');
             setCart({});
         } catch (err) {
             toast.error('Order failed');
+        } finally {
+            setIsPlacingOrder(false);
         }
     };
 
@@ -51,6 +66,17 @@ const FoodMenu = ({ bookingId }: { bookingId: string }) => {
 
     return (
         <div className="pb-24">
+            {/* Loader Modal */}
+            {isPlacingOrder && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-[60] backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center animate-in zoom-in-95 duration-200">
+                        <Loader size={48} className="text-blue-600 mb-4" />
+                        <h3 className="text-lg font-bold text-gray-800">Placing Your Order</h3>
+                        <p className="text-gray-500 text-sm mt-1">Please wait a moment...</p>
+                    </div>
+                </div>
+            )}
+
             {/* Category Filter */}
             <div className="flex overflow-x-auto pb-4 mb-4 gap-2 no-scrollbar">
                 {categories.map(cat => (
@@ -108,7 +134,10 @@ const FoodMenu = ({ bookingId }: { bookingId: string }) => {
 
             {/* Cart Floating Action Button */}
             {total > 0 && (
-                <div className="fixed bottom-6 left-4 right-4 md:left-auto md:right-8 md:w-96 bg-gray-900 text-white p-4 rounded-xl shadow-2xl z-50 transform transition-all hover:scale-105 cursor-pointer" onClick={placeOrder}>
+                <div
+                    className={`fixed bottom-6 left-4 right-4 md:left-auto md:right-8 md:w-96 bg-gray-900 text-white p-4 rounded-xl shadow-2xl z-50 transform transition-all ${isPlacingOrder ? 'cursor-not-allowed opacity-90' : 'hover:scale-105 cursor-pointer'}`}
+                    onClick={!isPlacingOrder ? placeOrder : undefined}
+                >
                     <div className="flex justify-between items-center">
                         <div className="flex items-center">
                             <div className="bg-white/20 px-3 py-1 rounded-lg mr-3 font-bold">
@@ -120,7 +149,13 @@ const FoodMenu = ({ bookingId }: { bookingId: string }) => {
                             </div>
                         </div>
                         <div className="flex items-center font-bold text-blue-300">
-                            Place Order <span className="ml-2">→</span>
+                            {isPlacingOrder ? (
+                                <span className="flex items-center">
+                                    <Loader size={20} className="mr-2 animate-spin" /> Placing...
+                                </span>
+                            ) : (
+                                <>Place Order <span className="ml-2">→</span></>
+                            )}
                         </div>
                     </div>
                 </div>
