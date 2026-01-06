@@ -4,6 +4,8 @@ import { AuthProvider, useAuth } from './features/auth/auth.store'
 import LoginPage from './features/auth/pages/LoginPage'
 import AdminDashboard from './features/dashboard/pages/AdminDashboard'
 import GuestDashboard from './features/dashboard/pages/GuestDashboard'
+import LandingPage from './features/landing/pages/LandingPage'
+import { Toaster } from 'react-hot-toast';
 
 const ProtectedRoute = ({ children, role }: { children: React.ReactNode, role?: string }) => {
     const { user, loading } = useAuth();
@@ -20,8 +22,6 @@ const ProtectedRoute = ({ children, role }: { children: React.ReactNode, role?: 
     }
     return <>{children}</>;
 };
-
-import { Toaster } from 'react-hot-toast';
 
 function App() {
     return (
@@ -40,20 +40,11 @@ function App() {
                             <GuestDashboard />
                         </ProtectedRoute>
                     } />
-                    <Route path="/" element={<HomeRedirect />} />
+                    <Route path="/" element={<LandingPage />} />
                 </Routes>
             </AuthProvider>
         </Router>
     )
 }
-
-const HomeRedirect = () => {
-    const { user, loading } = useAuth();
-    if (loading) return <div>Loading...</div>;
-    if (!user) return <Navigate to="/login" />;
-    if (user.role === 'OWNER') return <Navigate to="/admin" />;
-    if (user.role === 'GUEST') return <Navigate to="/guest" />;
-    return <Navigate to="/login" />;
-};
 
 export default App
