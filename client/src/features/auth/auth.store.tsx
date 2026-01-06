@@ -10,7 +10,7 @@ interface User {
 
 interface AuthContextType {
     user: User | null;
-    login: (username: string, password: string) => Promise<{ success: boolean; message?: string }>;
+    login: (username: string, password: string) => Promise<{ success: boolean; message?: string; user?: User }>;
     logout: () => void;
     loading: boolean;
 }
@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             localStorage.setItem('user', JSON.stringify(user));
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             setUser(user);
-            return { success: true };
+            return { success: true, user };
         } catch (err) {
             return { success: false, message: err.response?.data?.error || 'Login failed' };
         }
