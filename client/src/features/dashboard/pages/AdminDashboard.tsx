@@ -8,10 +8,12 @@ import BookingManager from '../../bookings/components/BookingManager';
 import KitchenOrders from '../../orders/components/KitchenOrders';
 import MenuManager from '../../menu/components/MenuManager';
 import BillingManager from '../../billing/components/BillingDashboard';
+import DashboardStats from '../components/DashboardStats';
+import { LayoutDashboard } from 'lucide-react';
 
 const AdminDashboard = () => {
     const { logout, user } = useAuth();
-    const [activeTab, setActiveTab] = useState('rooms');
+    const [activeTab, setActiveTab] = useState('dashboard');
 
     return (
         <div className="flex h-screen bg-gray-100">
@@ -22,6 +24,7 @@ const AdminDashboard = () => {
                     <p className="text-sm text-gray-500 mt-2">Welcome, {user?.name}</p>
                 </div>
                 <nav className="mt-6">
+                    <NavItem icon={<LayoutDashboard size={20} />} label="Dashboard" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
                     <NavItem icon={<Home size={20} />} label="Rooms" active={activeTab === 'rooms'} onClick={() => setActiveTab('rooms')} />
                     <NavItem icon={<Users size={20} />} label="Bookings" active={activeTab === 'bookings'} onClick={() => setActiveTab('bookings')} />
                     <NavItem icon={<Utensils size={20} />} label="Menu" active={activeTab === 'menu'} onClick={() => setActiveTab('menu')} />
@@ -42,6 +45,7 @@ const AdminDashboard = () => {
                     <h1 className="text-2xl font-bold text-gray-800 capitalize">{activeTab} Management</h1>
                 </header>
 
+                {activeTab === 'dashboard' && <DashboardStats />}
                 {activeTab === 'rooms' && <RoomManager />}
                 {activeTab === 'bookings' && <BookingManager />}
                 {activeTab === 'menu' && <MenuManager />}

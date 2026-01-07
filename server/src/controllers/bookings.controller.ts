@@ -8,12 +8,47 @@ import { AuthRequest } from '../middlewares/auth.middleware';
 // Helper to generate temp password
 const generateTempPassword = () => Math.random().toString(36).slice(-8);
 
+// Helper to generate custom username from guest name
+const generateUsername = (guestName: string): string => {
+    // Clean and normalize the guest name
+    const cleanName = guestName.toLowerCase().replace(/[^a-z\s]/g, '');
+    const nameParts = cleanName.split(' ').filter(part => part.length > 0);
+
+    if (nameParts.length === 0) {
+        // Fallback if name is invalid
+        return 'guest' + Math.random().toString(36).slice(-4);
+    }
+
+    let username = '';
+
+    if (nameParts.length === 1) {
+        // Single name: take first 5-6 chars
+        username = nameParts[0].slice(0, 6);
+    } else {
+        // Multiple names: take first 3-4 from first name + first 2 from last name
+        const firstName = nameParts[0];
+        const lastName = nameParts[nameParts.length - 1];
+        username = firstName.slice(0, 4) + lastName.slice(0, 2);
+    }
+
+    // Add 3-4 digit random number to ensure uniqueness
+    const randomSuffix = Math.floor(100 + Math.random() * 9000); // 3-4 digits
+    username = username + randomSuffix;
+
+    // Ensure it's within 8-10 characters
+    if (username.length > 10) {
+        username = username.slice(0, 7) + randomSuffix.toString().slice(-3);
+    }
+
+    return username;
+};
+
 export const createBooking = async (req: Request, res: Response) => {
     const { roomId, guestName, checkInDate, expectedCheckOutDate } = req.body;
 
     try {
         // 1. Create Guest User
-        const username = `guest_${Date.now()}`;
+        const username = generateUsername(guestName);
         const tempPassword = generateTempPassword();
         const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
