@@ -2,7 +2,6 @@ import Navbar from '../components/Navbar';
 import Hero from '../components/Hero';
 import AboutSection from '../components/AboutSection';
 import TrustMetrics from '../components/TrustMetrics';
-import RoomsPreview from '../components/RoomsPreview';
 import DiningAmenities from '../components/DiningAmenities';
 import AmenitiesGrid from '../components/AmenitiesGrid';
 import Gallery from '../components/Gallery';
@@ -17,7 +16,6 @@ export default function LandingPage() {
             <Hero />
             <AboutSection />
             <TrustMetrics />
-            <RoomsPreview />
             <DiningAmenities />
             <AmenitiesGrid />
             <Gallery />

@@ -6,7 +6,7 @@ export default function DiningAmenities() {
         <section className="relative w-full h-[80vh] overflow-hidden">
             <div className="absolute inset-0">
                 <img
-                    src="/dining.png"
+                    src="/dining.webp"
                     alt="Fine Dining"
                     className="w-full h-full object-cover"
                 />

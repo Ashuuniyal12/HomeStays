@@ -4,10 +4,14 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 
 const images = [
     '/hero-bg.png',
-    '/dining.png',
+    '/dining.webp',
     '/room-std.png',
     '/gallery-1.png',
     '/room-alt.png',
+    '/room-2.webp',
+    '/outdoor.webp',
+    '/room-3.webp',
+    '/outdoor-coffee.webp'
 ];
 
 export default function Gallery() {
