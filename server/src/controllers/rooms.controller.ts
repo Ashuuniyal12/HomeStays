@@ -25,7 +25,15 @@ export const getRooms = async (req: AuthRequest, res: Response) => {
         const rooms = await prisma.room.findMany({
             where,
             orderBy: { number: 'asc' },
-            include: { bookings: true }
+            include: {
+                bookings: {
+                    include: {
+                        guest: {
+                            select: { name: true }
+                        }
+                    }
+                }
+            }
         });
         res.json(rooms);
     } catch (err) {

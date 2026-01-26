@@ -57,6 +57,14 @@ const RoomGantt: React.FC<RoomGanttProps> = ({ rooms, startDate, daysToShow = 14
         };
     };
 
+    const isSameDay = (d1: Date, d2: Date) => {
+        return d1.getDate() === d2.getDate() &&
+            d1.getMonth() === d2.getMonth() &&
+            d1.getFullYear() === d2.getFullYear();
+    };
+
+    const today = new Date();
+
     return (
         <div className="bg-white rounded-lg shadow overflow-x-auto">
             <div className="min-w-[800px]">
@@ -64,22 +72,28 @@ const RoomGantt: React.FC<RoomGanttProps> = ({ rooms, startDate, daysToShow = 14
                 <div className="flex border-b">
                     <div className="w-40 p-4 font-bold border-r sticky left-0 bg-white z-10">Room</div>
                     <div className="flex-1 flex">
-                        {dates.map((date, i) => (
-                            <div key={i} className="flex-1 p-2 text-center text-sm border-r min-w-[50px]">
-                                <div className="font-bold">{date.getDate()}</div>
-                                <div className="text-xs text-gray-500">{date.toLocaleString('default', { month: 'short' })}</div>
-                            </div>
-                        ))}
+                        {dates.map((date, i) => {
+                            const isToday = isSameDay(date, today);
+                            return (
+                                <div key={i} className={`flex-1 p-2 text-center text-sm border-r min-w-[50px] ${isToday ? 'bg-red-100/70 text-red-700 font-bold' : ''}`}>
+                                    <div className="font-bold">{date.getDate()}</div>
+                                    <div className={`text-xs ${isToday ? 'text-red-600' : 'text-gray-500'}`}>{date.toLocaleString('default', { month: 'short' })}</div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
 
                 {/* Body */}
                 <div className="relative">
-                    {/* Vertical grid lines */}
-                    <div className="absolute inset-0 flex ml-40 pointer-events-none">
-                        {dates.map((_, i) => (
-                            <div key={i} className="flex-1 border-r border-gray-100 last:border-0"></div>
-                        ))}
+                    {/* Vertical grid lines - WITH TODAY HIGHLIGHT */}
+                    <div className="absolute inset-0 flex ml-40 pointer-events-none z-0">
+                        {dates.map((date, i) => {
+                            const isToday = isSameDay(date, today);
+                            return (
+                                <div key={i} className={`flex-1 border-r border-gray-100 last:border-0 ${isToday ? 'bg-red-100/40' : ''}`}></div>
+                            );
+                        })}
                     </div>
 
                     {rooms.map(room => (

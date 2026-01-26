@@ -6,6 +6,7 @@ import RoomGantt from './RoomGantt';
 import MyRooms from './MyRooms';
 import TodaysRoomStatus from './TodaysRoomStatus';
 import Loader from '../../../utils/Loader';
+import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 
 const RoomManager = () => {
     const { user } = useAuth();
@@ -118,11 +119,28 @@ const RoomManager = () => {
             {/* Gantt Chart Section */}
             <section className="space-y-4">
                 <div className="flex justify-between items-center">
-                    <h3 className="text-xl font-semibold">Room Availability</h3>
-                    <div className="flex items-center space-x-2">
-                        <button onClick={() => shiftDate(-7)} className="p-2 hover:bg-gray-100 rounded">&lt;</button>
-                        <span className="font-medium">{startDate.toLocaleDateString()}</span>
-                        <button onClick={() => shiftDate(7)} className="p-2 hover:bg-gray-100 rounded">&gt;</button>
+                    <h3 className="text-xl font-semibold text-gray-800">Room Availability</h3>
+
+                    {/* Improved Date Shifter */}
+                    <div className="flex items-center bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
+                        <button
+                            onClick={() => shiftDate(-7)}
+                            className="p-2 hover:bg-gray-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors"
+                            title="Previous Week"
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                        <div className="flex items-center px-4 font-medium text-gray-700 select-none min-w-[160px] justify-center border-l border-r border-gray-100 mx-1">
+                            <Calendar size={16} className="mr-2.5 text-blue-500" />
+                            {startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </div>
+                        <button
+                            onClick={() => shiftDate(7)}
+                            className="p-2 hover:bg-gray-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors"
+                            title="Next Week"
+                        >
+                            <ChevronRight size={20} />
+                        </button>
                     </div>
                 </div>
                 <RoomGantt rooms={rooms} startDate={startDate} daysToShow={14} />
