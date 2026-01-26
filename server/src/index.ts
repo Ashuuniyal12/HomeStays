@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+// Force restart
 dotenv.config();
 
 // Fallback for environment variables if not set
@@ -51,6 +52,7 @@ import bookingRoutes from './routes/bookings.routes';
 import menuRoutes from './routes/menu.routes';
 import orderRoutes from './routes/orders.routes';
 import dashboardRoutes from './routes/dashboard.routes';
+import guestsRoutes from './routes/guests.routes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
@@ -58,6 +60,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/guests', guestsRoutes);
 
 const PORT = process.env.PORT || 3000;
 

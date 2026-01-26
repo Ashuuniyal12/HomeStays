@@ -47,11 +47,33 @@ const BillView = ({ bookingId, isAdmin = false, onCheckout, readonly = false, is
                     <span>₹{bill.foodTotal}</span>
                 </div>
                 {bill.breakdown.foodItems && bill.breakdown.foodItems.length > 0 ? (
-                    <div className="max-h-40 overflow-y-auto bg-gray-50 p-2 rounded text-sm space-y-1 custom-scrollbar">
-                        {bill.breakdown.foodItems.map((item: any, idx: number) => (
-                            <div key={idx} className="flex justify-between text-gray-600">
-                                <span>{item.name} <span className="text-gray-400 text-xs">x{item.quantity}</span></span>
-                                <span>₹{item.total}</span>
+                    <div className="max-h-60 overflow-y-auto bg-gray-50 p-2 rounded text-sm space-y-4 custom-scrollbar">
+                        {Object.entries(
+                            bill.breakdown.foodItems.reduce((groups: any, item: any) => {
+                                const date = new Date(item.orderDate).toLocaleDateString('en-US', {
+                                    month: 'short', day: 'numeric', year: 'numeric'
+                                });
+                                if (!groups[date]) groups[date] = [];
+                                groups[date].push(item);
+                                return groups;
+                            }, {})
+                        ).map(([date, items]: [string, any]) => (
+                            <div key={date}>
+                                <h4 className="text-xs font-bold text-gray-500 uppercase flex items-center gap-2 mb-2">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                                    {date}
+                                </h4>
+                                <div className="space-y-1.5 pl-2 border-l-2 border-gray-200">
+                                    {(items as any[]).map((item: any, idx: number) => (
+                                        <div key={idx} className="flex justify-between text-gray-700">
+                                            <span>
+                                                {item.name}
+                                                <span className="text-gray-400 text-xs ml-1">x{item.quantity}</span>
+                                            </span>
+                                            <span className="font-medium">₹{item.total}</span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         ))}
                     </div>

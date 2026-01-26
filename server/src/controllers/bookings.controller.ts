@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+// Trigger restart after prisma generate 
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import prisma from '../prisma';
@@ -44,7 +45,7 @@ const generateUsername = (guestName: string): string => {
 };
 
 export const createBooking = async (req: Request, res: Response) => {
-    const { roomId, guestName, checkInDate, expectedCheckOutDate } = req.body;
+    const { roomId, guestName, checkInDate, expectedCheckOutDate, phoneNumber, idType, idNumber } = req.body;
 
     try {
         // 1. Create Guest User
@@ -57,7 +58,10 @@ export const createBooking = async (req: Request, res: Response) => {
                 username,
                 password: hashedPassword,
                 name: guestName,
-                role: 'GUEST'
+                role: 'GUEST',
+                phoneNumber,
+                idType,
+                idNumber
             }
         });
 
@@ -101,6 +105,7 @@ export const getActiveBookings = async (req: Request, res: Response) => {
         });
         res.json(bookings);
     } catch (err) {
+        console.error('Active Bookings Error:', err);
         res.status(500).json({ error: 'Fetch failed' });
     }
 };
@@ -115,6 +120,7 @@ export const getPastBookings = async (req: Request, res: Response) => {
         });
         res.json(bookings);
     } catch (err) {
+        console.error('Past Bookings Error:', err);
         res.status(500).json({ error: 'Fetch failed' });
     }
 };
@@ -132,6 +138,7 @@ export const getMyBooking = async (req: AuthRequest, res: Response) => {
         if (!booking) return res.status(404).json({ error: 'No booking found' });
         res.json(booking);
     } catch (err) {
+        console.error('My Booking Error:', err);
         res.status(500).json({ error: 'Fetch failed' });
     }
 };

@@ -4,6 +4,7 @@ import { useAuth } from '../../auth/auth.store';
 import { LogOut, Home, Coffee, Users, DollarSign, Utensils } from 'lucide-react';
 
 import RoomManager from '../../rooms/components/RoomManager';
+import GuestManager from '../../guests/components/GuestManager';
 import BookingManager from '../../bookings/components/BookingManager';
 import KitchenOrders from '../../orders/components/KitchenOrders';
 import MenuManager from '../../menu/components/MenuManager';
@@ -27,6 +28,7 @@ const AdminDashboard = () => {
                     <NavItem icon={<LayoutDashboard size={20} />} label="Dashboard" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
                     <NavItem icon={<Home size={20} />} label="Rooms" active={activeTab === 'rooms'} onClick={() => setActiveTab('rooms')} />
                     <NavItem icon={<Users size={20} />} label="Bookings" active={activeTab === 'bookings'} onClick={() => setActiveTab('bookings')} />
+                    <NavItem icon={<Users size={20} />} label="Guests" active={activeTab === 'guests'} onClick={() => setActiveTab('guests')} />
                     <NavItem icon={<Utensils size={20} />} label="Menu" active={activeTab === 'menu'} onClick={() => setActiveTab('menu')} />
                     <NavItem icon={<Coffee size={20} />} label="Kitchen" active={activeTab === 'kitchen'} onClick={() => setActiveTab('kitchen')} />
                     {user?.role === 'OWNER' && (
@@ -48,6 +50,7 @@ const AdminDashboard = () => {
                 {activeTab === 'dashboard' && <DashboardStats />}
                 {activeTab === 'rooms' && <RoomManager />}
                 {activeTab === 'bookings' && <BookingManager />}
+                {activeTab === 'guests' && <GuestManager />}
                 {activeTab === 'menu' && <MenuManager />}
                 {activeTab === 'kitchen' && <KitchenOrders />}
                 {activeTab === 'billing' && <BillingManager />}

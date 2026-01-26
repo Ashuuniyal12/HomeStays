@@ -3,7 +3,8 @@ import axios from 'axios';
 import BillView from '../../billing/components/BillView';
 import { toast } from 'react-hot-toast';
 import Loader from '../../../utils/Loader';
-import { User, Calendar, LogIn, LogOut, CreditCard, X, Plus, UserCheck } from 'lucide-react';
+import { User, Calendar, LogIn, LogOut, CreditCard, X, Plus, UserCheck, Utensils } from 'lucide-react';
+import AdminOrderModal from './AdminOrderModal';
 
 const BookingManager = () => {
     const [bookings, setBookings] = useState<any[]>([]);
@@ -11,6 +12,7 @@ const BookingManager = () => {
     const [rooms, setRooms] = useState<any[]>([]);
     const [showForm, setShowForm] = useState(false);
     const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
+    const [selectedBookingForOrder, setSelectedBookingForOrder] = useState<any>(null); // New State
     const [viewMode, setViewMode] = useState<'ACTIVE' | 'HISTORY'>('ACTIVE');
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -18,6 +20,9 @@ const BookingManager = () => {
     const [formData, setFormData] = useState({
         roomId: '',
         guestName: '',
+        phoneNumber: '',
+        idType: 'Aadhar',
+        idNumber: '',
         checkInDate: new Date().toISOString().split('T')[0],
         expectedCheckOutDate: ''
     });
@@ -62,9 +67,18 @@ const BookingManager = () => {
             fetchData();
             toast.success('Check-in completed successfully!');
             // Reset form
-            setFormData({ roomId: '', guestName: '', checkInDate: new Date().toISOString().split('T')[0], expectedCheckOutDate: '' });
-        } catch (err) {
-            toast.error('Check-in failed');
+            setFormData({
+                roomId: '',
+                guestName: '',
+                phoneNumber: '',
+                idType: 'Aadhar',
+                idNumber: '',
+                checkInDate: new Date().toISOString().split('T')[0],
+                expectedCheckOutDate: ''
+            });
+        } catch (err: any) {
+            console.error(err);
+            toast.error('Check-in failed: ' + (err.response?.data?.error || err.message));
         } finally {
             setIsProcessing(false);
         }
@@ -130,6 +144,16 @@ const BookingManager = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Admin Order Modal - New Addition */}
+            {selectedBookingForOrder && (
+                <AdminOrderModal
+                    bookingId={selectedBookingForOrder.id}
+                    roomNumber={selectedBookingForOrder.room?.number?.toString() || ''}
+                    guestName={selectedBookingForOrder.guest?.name || 'Guest'}
+                    onClose={() => setSelectedBookingForOrder(null)}
+                />
             )}
 
             {/* Header with Tabs and New Check-in Button */}
@@ -207,6 +231,50 @@ const BookingManager = () => {
                                     placeholder="Enter guest full name"
                                 />
                             </div>
+
+                            {/* Phone Number */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1.5">Phone Number</label>
+                                <input
+                                    required
+                                    type="tel"
+                                    className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+                                    value={formData.phoneNumber}
+                                    onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })}
+                                    placeholder="Mobile number string with country code"
+                                />
+                            </div>
+
+                            {/* ID Details Group */}
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1.5">ID Type</label>
+                                    <select
+                                        className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+                                        value={formData.idType}
+                                        onChange={e => setFormData({ ...formData, idType: e.target.value })}
+                                    >
+                                        <option value="Aadhar">Aadhar Card</option>
+                                        <option value="PAN">PAN Card</option>
+                                        <option value="Voter ID">Voter ID</option>
+                                        <option value="Driving License">Driving License</option>
+                                        <option value="Passport">Passport</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1.5">ID Number</label>
+                                    <input
+                                        required
+                                        type="text"
+                                        className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+                                        value={formData.idNumber}
+                                        onChange={e => setFormData({ ...formData, idNumber: e.target.value })}
+                                        placeholder="ID Number"
+                                    />
+                                </div>
+                            </div>
+
                             <div>
                                 <label className="block text-xs font-medium text-gray-600 mb-1.5">Check-in Date</label>
                                 <input
@@ -317,8 +385,17 @@ const BookingManager = () => {
                                         </div>
                                     </div>
 
-                                    {/* Action Button */}
-                                    <div>
+                                    {/* Action Buttons */}
+                                    <div className="flex items-center gap-2">
+                                        {viewMode === 'ACTIVE' && (
+                                            <button
+                                                onClick={() => setSelectedBookingForOrder(booking)}
+                                                className="flex items-center gap-1.5 text-orange-600 border border-orange-600 px-3 py-1.5 rounded-md text-sm font-medium hover:bg-orange-50 transition-colors"
+                                            >
+                                                <Utensils size={16} />
+                                                Add Order
+                                            </button>
+                                        )}
                                         <button
                                             onClick={() => setSelectedBookingId(booking.id)}
                                             className="flex items-center gap-1.5 text-blue-600 border border-blue-600 px-3 py-1.5 rounded-md text-sm font-medium hover:bg-blue-50 transition-colors"

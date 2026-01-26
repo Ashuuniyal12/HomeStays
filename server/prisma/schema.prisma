@@ -8,92 +8,84 @@ datasource db {
 }
 
 model User {
-  id       String    @id @default(uuid())
-  username String    @unique
-  password String
-  role     String    // OWNER, STAFF, GUEST
-  name     String?
-  isActive Boolean   @default(true)
-  checkIn  DateTime?
-  checkOut DateTime?
-  
-  bookings Booking[]
-  rooms    Room[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String    @id @default(uuid())
+  username    String    @unique
+  password    String
+  role        String
+  name        String?
+  isActive    Boolean   @default(true)
+  checkIn     DateTime?
+  checkOut    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  idNumber    String?
+  idType      String?
+  phoneNumber String?
+  bookings    Booking[]
+  rooms       Room[]
 }
 
 model Room {
-  id        Int      @id @default(autoincrement())
-  number    String   @unique
-  type      String   // Standard, Deluxe, Family
-  description String? // Description of the room
-  occupancy Int
-  price     Float
-  status    String   // AVAILABLE, OCCUPIED, CLEANING, MAINTENANCE
-
-  ownerId   String?
-  owner     User?    @relation(fields: [ownerId], references: [id])
-
-  hasBalcony    Boolean @default(false)
-  bathroomCount Int     @default(1)
-  isAC          Boolean @default(false)
-
-  bookings Booking[]
+  id            Int       @id @default(autoincrement())
+  number        String    @unique
+  type          String
+  occupancy     Int
+  price         Float
+  status        String
+  ownerId       String?
+  bathroomCount Int       @default(1)
+  hasBalcony    Boolean   @default(false)
+  isAC          Boolean   @default(false)
+  description   String?
+  bookings      Booking[]
+  owner         User?     @relation(fields: [ownerId], references: [id])
 }
 
 model Booking {
-  id        String   @id @default(uuid())
-  guestId   String
-  guest     User     @relation(fields: [guestId], references: [id])
-  roomId    Int
-  room      Room     @relation(fields: [roomId], references: [id])
-  checkIn   DateTime
-  checkOut  DateTime
-  status    String   // ACTIVE, COMPLETED, CANCELLED
-  
+  id            String   @id @default(uuid())
+  guestId       String
+  roomId        Int
+  checkIn       DateTime
+  checkOut      DateTime
+  status        String
+  billAmount    Float    @default(0)
+  paidAmount    Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   plainPassword String?
-  
-  orders    Order[]
-  billAmount Float     @default(0)
-  paidAmount Float     @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  guest         User     @relation(fields: [guestId], references: [id])
+  room          Room     @relation(fields: [roomId], references: [id])
+  orders        Order[]
 }
 
 model MenuItem {
-  id          Int     @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   name        String
   description String?
   category    String
   price       Float
   isVeg       Boolean
-  available   Boolean @default(true)
-
-  orderItems OrderItem[]
+  available   Boolean     @default(true)
+  orderItems  OrderItem[]
 }
 
 model Order {
-  id        String   @id @default(uuid())
+  id        String      @id @default(uuid())
   bookingId String
-  booking   Booking  @relation(fields: [bookingId], references: [id])
-  status    String   // PENDING, PREPARING, READY, DELIVERED
+  status    String
   total     Float
-  
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  booking   Booking     @relation(fields: [bookingId], references: [id])
   items     OrderItem[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model OrderItem {
   id         String   @id @default(uuid())
   orderId    String
-  order      Order    @relation(fields: [orderId], references: [id])
   menuItemId Int
-  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
   quantity   Int
   price      Float
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  order      Order    @relation(fields: [orderId], references: [id])
 }
