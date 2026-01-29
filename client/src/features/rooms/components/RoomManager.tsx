@@ -23,7 +23,11 @@ const RoomManager = () => {
     });
 
     // Gantt Controls
-    const [startDate, setStartDate] = useState(new Date());
+    const [startDate, setStartDate] = useState(() => {
+        const d = new Date();
+        d.setDate(d.getDate() - 3);
+        return d;
+    });
 
     useEffect(() => {
         fetchRooms();
