@@ -54,14 +54,20 @@ export const createBooking = async (req: Request, res: Response) => {
         const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
         // Check if user exists (by email or phone) to avoid duplicates
-        let guest = await prisma.user.findFirst({
-            where: {
-                OR: [
-                    email ? { email: { equals: email, mode: 'insensitive' } } : {},
-                    phoneNumber ? { phoneNumber: { contains: phoneNumber } } : {}
-                ].filter(Boolean) as any
-            }
-        });
+        const whereConditions: any[] = [];
+        if (email && email.trim() !== '') {
+            whereConditions.push({ email: { equals: email, mode: 'insensitive' } });
+        }
+        if (phoneNumber && phoneNumber.trim() !== '') {
+            whereConditions.push({ phoneNumber: { contains: phoneNumber } });
+        }
+
+        let guest = null;
+        if (whereConditions.length > 0) {
+            guest = await prisma.user.findFirst({
+                where: { OR: whereConditions }
+            });
+        }
 
         if (guest) {
             // Update existing guest credentials and details
@@ -314,9 +320,20 @@ export const searchGuest = async (req: Request, res: Response) => {
         // Use the most recent guest details for the form
         const latestGuest = bookings[0].guest;
 
+        // Calculate Tier
+        const count = bookings.length;
+        let tier = 'Normal';
+        if (count >= 10) tier = 'Diamond';
+        else if (count >= 7) tier = 'Gold';
+        else if (count >= 3) tier = 'Silver';
+
         res.json({
             ...latestGuest,
-            bookings // Return the aggregated list of bookings
+            bookings, // Return the aggregated list of bookings
+            stats: {
+                totalVisits: count,
+                tier
+            }
         });
     } catch (err) {
         console.error('Search Guest Error', err);

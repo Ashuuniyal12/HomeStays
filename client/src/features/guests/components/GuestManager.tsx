@@ -74,6 +74,7 @@ const GuestManager = () => {
                                 <th className="p-4">Phone</th>
                                 <th className="p-4">ID Details</th>
                                 <th className="p-4">Last Visit</th>
+                                <th className="p-4 text-center">Tier</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -114,6 +115,23 @@ const GuestManager = () => {
                                         </td>
                                         <td className="p-4 text-gray-600 text-sm">
                                             {guest.bookings?.[0] ? new Date(guest.bookings[0].checkIn).toLocaleDateString() : 'N/A'}
+                                        </td>
+                                        <td className="p-4 text-center">
+                                            {(() => {
+                                                const count = guest.bookings ? guest.bookings.length : 0;
+                                                let tier = 'Normal';
+                                                let style = 'bg-green-50 text-green-700 border-green-200';
+
+                                                if (count >= 10) { tier = 'Diamond'; style = 'bg-blue-100 text-blue-700 border-blue-300'; }
+                                                else if (count >= 7) { tier = 'Gold'; style = 'bg-yellow-100 text-yellow-700 border-yellow-300'; }
+                                                else if (count >= 3) { tier = 'Silver'; style = 'bg-gray-100 text-gray-700 border-gray-300'; }
+
+                                                return (
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-bold border ${style}`}>
+                                                        {tier}
+                                                    </span>
+                                                );
+                                            })()}
                                         </td>
                                     </tr>
                                 ))
@@ -222,8 +240,8 @@ const GuestManager = () => {
                                                             <td className="p-3">{booking.checkOut ? new Date(booking.checkOut).toLocaleDateString() : 'Active'}</td>
                                                             <td className="p-3">
                                                                 <span className={`px-2 py-1 rounded-full text-xs font-bold ${booking.status === 'ACTIVE' ? 'bg-green-100 text-green-700' :
-                                                                        booking.status === 'COMPLETED' ? 'bg-gray-100 text-gray-700' :
-                                                                            'bg-red-100 text-red-700'
+                                                                    booking.status === 'COMPLETED' ? 'bg-gray-100 text-gray-700' :
+                                                                        'bg-red-100 text-red-700'
                                                                     }`}>
                                                                     {booking.status}
                                                                 </span>

@@ -228,7 +228,7 @@ const RoomManager = () => {
 
                 {/* Right Side: Today's Status (Read Only) */}
                 <div className="lg:col-span-4 sticky top-6">
-                    <TodaysRoomStatus rooms={rooms} />
+                    <TodaysRoomStatus rooms={rooms} onRefresh={fetchRooms} />
                 </div>
             </div>
 

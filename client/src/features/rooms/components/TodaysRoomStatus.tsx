@@ -1,5 +1,8 @@
-import React from 'react';
-import { User, Calendar, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
+import { User, Calendar, CheckCircle, XCircle, Clock, AlertCircle, X, ChevronRight } from 'lucide-react';
+import Loader from '../../../utils/Loader';
 
 interface Booking {
     id: string;
@@ -20,22 +23,47 @@ interface Room {
 
 interface TodaysRoomStatusProps {
     rooms: Room[];
+    onRefresh?: () => void;
 }
 
-const TodaysRoomStatus: React.FC<TodaysRoomStatusProps> = ({ rooms }) => {
+const TodaysRoomStatus: React.FC<TodaysRoomStatusProps> = ({ rooms, onRefresh }) => {
     // Get today's date at midnight for comparison
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+
+    const [editingRoomId, setEditingRoomId] = useState<number | null>(null);
+    const [isUpdating, setIsUpdating] = useState(false);
 
     const getTodaysBooking = (room: Room) => {
         if (!room.bookings) return null;
         return room.bookings.find(booking => {
             const start = new Date(booking.checkIn);
             const end = new Date(booking.checkOut);
-            // Check if today falls within the booking range
             return today >= new Date(start.setHours(0, 0, 0, 0)) && today < new Date(end.setHours(0, 0, 0, 0));
         });
     };
+
+    const handleStatusUpdate = async (roomId: number, roomNumber: string, newStatus: string) => {
+        setIsUpdating(true);
+        try {
+            await axios.patch(`/api/rooms/${roomId}/status`, { status: newStatus });
+            toast.success(`Room ${roomNumber} marked as ${newStatus}`);
+            if (onRefresh) onRefresh();
+            setEditingRoomId(null);
+        } catch (err) {
+            console.error(err);
+            toast.error('Failed to update status');
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const statusOptions = [
+        { value: 'AVAILABLE', label: 'Available', color: 'green', icon: CheckCircle },
+        { value: 'CLEANING', label: 'Cleaning', color: 'yellow', icon: Clock },
+        { value: 'MAINTENANCE', label: 'Maintenance', color: 'gray', icon: AlertCircle },
+        { value: 'OCCUPIED', label: 'Occupied', color: 'red', icon: XCircle },
+    ];
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden h-full flex flex-col">
@@ -56,7 +84,54 @@ const TodaysRoomStatus: React.FC<TodaysRoomStatusProps> = ({ rooms }) => {
                     rooms.map(room => {
                         const activeBooking = getTodaysBooking(room);
                         const isOccupied = room.status === 'OCCUPIED' || !!activeBooking;
+                        const isEditing = editingRoomId === room.id;
 
+                        // Inline Edit Mode
+                        if (isEditing) {
+                            return (
+                                <div key={room.id} className="bg-white border-2 border-blue-500 rounded-lg p-3 shadow-md animate-in fade-in zoom-in-95 duration-200">
+                                    <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
+                                        <div className="font-bold text-gray-800 flex items-center gap-2">
+                                            Update Room {room.number}
+                                        </div>
+                                        <button
+                                            onClick={() => setEditingRoomId(null)}
+                                            className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-full"
+                                            title="Cancel"
+                                        >
+                                            <X size={18} />
+                                        </button>
+                                    </div>
+
+                                    {isUpdating ? (
+                                        <div className="py-6 flex justify-center">
+                                            <Loader size={24} className="text-blue-600" />
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {statusOptions.map(opt => (
+                                                <button
+                                                    key={opt.value}
+                                                    onClick={() => handleStatusUpdate(room.id, room.number, opt.value)}
+                                                    className={`flex flex-col items-center justify-center p-2 rounded border transition-all
+                                                        ${room.status === opt.value ? 'bg-blue-50 border-blue-300 ring-1 ring-blue-300' : 'bg-gray-50 border-gray-200 hover:border-gray-300 hover:bg-white'}
+                                                    `}
+                                                >
+                                                    <opt.icon size={16} className={`mb-1 ${opt.color === 'green' ? 'text-green-600' :
+                                                            opt.color === 'yellow' ? 'text-yellow-600' :
+                                                                opt.color === 'red' ? 'text-red-600' : 'text-gray-600'
+                                                        }`} />
+                                                    <span className={`text-[10px] font-bold uppercase ${room.status === opt.value ? 'text-blue-700' : 'text-gray-600'
+                                                        }`}>{opt.label}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        }
+
+                        // Normal Display Mode
                         return (
                             <div
                                 key={room.id}
@@ -82,13 +157,17 @@ const TodaysRoomStatus: React.FC<TodaysRoomStatusProps> = ({ rooms }) => {
                                             <span className="font-bold text-gray-800">Room {room.number}</span>
                                             <span className="text-xs text-gray-500 font-medium px-1.5 py-0.5 bg-white/50 rounded backdrop-blur-sm border border-gray-200/50">{room.type}</span>
                                         </div>
-                                        <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border shadow-sm ${room.status === 'AVAILABLE' ? 'bg-green-100 text-green-700 border-green-200' :
-                                                room.status === 'OCCUPIED' ? 'bg-white/80 text-red-700 border-red-200' :
-                                                    room.status === 'CLEANING' ? 'bg-white/80 text-yellow-700 border-yellow-200' :
-                                                        'bg-gray-200 text-gray-700 border-gray-300'
-                                            }`}>
+                                        <button
+                                            onClick={() => setEditingRoomId(room.id)}
+                                            className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border shadow-sm transition-transform hover:scale-105 active:scale-95 cursor-pointer ${room.status === 'AVAILABLE' ? 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200' :
+                                                room.status === 'OCCUPIED' ? 'bg-white/80 text-red-700 border-red-200 hover:bg-red-100' :
+                                                    room.status === 'CLEANING' ? 'bg-white/80 text-yellow-700 border-yellow-200 hover:bg-yellow-100' :
+                                                        'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300'
+                                                }`}
+                                            title="Click to change status"
+                                        >
                                             {room.status}
-                                        </span>
+                                        </button>
                                     </div>
 
                                     {/* Booking Details if Occupied */}

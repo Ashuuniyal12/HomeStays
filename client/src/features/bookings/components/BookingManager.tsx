@@ -320,10 +320,21 @@ const BookingManager = () => {
                             {/* Guest History Banner */}
                             {foundGuest && (
                                 <div className="col-span-2 bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm">
-                                    <p className="font-semibold text-blue-800 flex items-center gap-2">
+                                    <div className="flex items-center gap-2">
                                         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                        Returning Guest: {foundGuest.name}
-                                    </p>
+                                        <p className="font-semibold text-blue-800">
+                                            Returning Guest: {foundGuest.name}
+                                        </p>
+                                        {foundGuest.stats && (
+                                            <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${foundGuest.stats.tier === 'Diamond' ? 'bg-blue-100 text-blue-700 border-blue-300' :
+                                                    foundGuest.stats.tier === 'Gold' ? 'bg-yellow-100 text-yellow-700 border-yellow-300' :
+                                                        foundGuest.stats.tier === 'Silver' ? 'bg-gray-100 text-gray-700 border-gray-300' :
+                                                            'bg-green-50 text-green-700 border-green-200'
+                                                }`}>
+                                                {foundGuest.stats.tier} ({foundGuest.stats.totalVisits} visits)
+                                            </span>
+                                        )}
+                                    </div>
                                     {foundGuest.bookings && foundGuest.bookings.length > 0 ? (
                                         <div className="mt-2 space-y-1">
                                             <p className="text-xs text-gray-500 font-medium">Last 3 Visits:</p>
