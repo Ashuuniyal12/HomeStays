@@ -86,6 +86,16 @@ const BillView = ({ bookingId, isAdmin = false, onCheckout, readonly = false, is
 
             <div className="border-t pt-4 mt-4 space-y-2">
                 <div className="flex justify-between items-center text-gray-600">
+                    <span>Subtotal</span>
+                    <span>₹{(bill.roomTotal + bill.foodTotal)?.toFixed(2)}</span>
+                </div>
+                {bill.discount > 0 && (
+                    <div className="flex justify-between items-center text-green-600">
+                        <span>Discount Applied</span>
+                        <span>-₹{bill.discount?.toFixed(2)}</span>
+                    </div>
+                )}
+                <div className="flex justify-between items-center font-bold text-gray-800 border-t border-dashed pt-2">
                     <span>Grand Total</span>
                     <span>₹{bill.grandTotal?.toFixed(2)}</span>
                 </div>

@@ -45,7 +45,7 @@ const generateUsername = (guestName: string): string => {
 };
 
 export const createBooking = async (req: Request, res: Response) => {
-    const { roomId, guestName, checkInDate, expectedCheckOutDate, phoneNumber, idType, idNumber, advancePayment } = req.body;
+    const { roomId, guestName, checkInDate, expectedCheckOutDate, phoneNumber, idType, idNumber, advancePayment, email, discount } = req.body;
 
     try {
         // 1. Create Guest User
@@ -53,17 +53,45 @@ export const createBooking = async (req: Request, res: Response) => {
         const tempPassword = generateTempPassword();
         const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
-        const guest = await prisma.user.create({
-            data: {
-                username,
-                password: hashedPassword,
-                name: guestName,
-                role: 'GUEST',
-                phoneNumber,
-                idType,
-                idNumber
+        // Check if user exists (by email or phone) to avoid duplicates
+        let guest = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    email ? { email: { equals: email, mode: 'insensitive' } } : {},
+                    phoneNumber ? { phoneNumber: { contains: phoneNumber } } : {}
+                ].filter(Boolean) as any
             }
         });
+
+        if (guest) {
+            // Update existing guest credentials and details
+            guest = await prisma.user.update({
+                where: { id: guest.id },
+                data: {
+                    password: hashedPassword, // Rotate password for this stay
+                    isActive: true,
+                    // Update details if provided
+                    name: guestName || guest.name,
+                    idType: idType || guest.idType,
+                    idNumber: idNumber || guest.idNumber,
+                    email: email || guest.email
+                }
+            });
+        } else {
+            // Create New Guest
+            guest = await prisma.user.create({
+                data: {
+                    username,
+                    password: hashedPassword,
+                    name: guestName,
+                    role: 'GUEST',
+                    phoneNumber,
+                    email,
+                    idType,
+                    idNumber
+                }
+            });
+        }
 
         // 2. Create Booking
         const booking = await prisma.booking.create({
@@ -74,7 +102,8 @@ export const createBooking = async (req: Request, res: Response) => {
                 checkOut: new Date(expectedCheckOutDate),
                 status: 'ACTIVE',
                 plainPassword: tempPassword,
-                paidAmount: advancePayment ? parseFloat(advancePayment) : 0
+                paidAmount: advancePayment ? parseFloat(advancePayment) : 0,
+                discount: discount ? parseFloat(discount) : 0 // New Field
             }
         });
 
@@ -89,7 +118,7 @@ export const createBooking = async (req: Request, res: Response) => {
 
         res.json({
             booking,
-            credentials: { username, password: tempPassword }
+            credentials: { username: guest.username, password: tempPassword }
         });
 
     } catch (err) {
@@ -256,6 +285,45 @@ export const getEarnings = async (req: Request, res: Response) => {
     }
 };
 
+export const searchGuest = async (req: Request, res: Response) => {
+    const { query } = req.query; // email or phone
+    if (!query) return res.status(400).json({ error: 'Query required' });
+
+    try {
+        // Find ALL bookings where the guest matches email or phone
+        // This solves the issue of split history if multiple User records exist for the same person
+        const bookings = await prisma.booking.findMany({
+            where: {
+                guest: {
+                    OR: [
+                        { email: { equals: String(query), mode: 'insensitive' } },
+                        { phoneNumber: { contains: String(query) } }
+                    ]
+                }
+            },
+            orderBy: { checkIn: 'desc' },
+            take: 10,
+            include: {
+                room: true,
+                guest: true
+            }
+        });
+
+        if (bookings.length === 0) return res.json(null);
+
+        // Use the most recent guest details for the form
+        const latestGuest = bookings[0].guest;
+
+        res.json({
+            ...latestGuest,
+            bookings // Return the aggregated list of bookings
+        });
+    } catch (err) {
+        console.error('Search Guest Error', err);
+        res.status(500).json({ error: 'Search failed' });
+    }
+};
+
 export const getBill = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
@@ -298,7 +366,8 @@ export const getBill = async (req: Request, res: Response) => {
 
         // 3. Tax (Removed)
         const tax = 0;
-        const grandTotal = roomTotal + foodTotal;
+        const discount = booking.discount || 0;
+        const grandTotal = (roomTotal + foodTotal) - discount;
         const paidAmount = booking.paidAmount || 0;
         const remainingAmount = grandTotal - paidAmount;
 
@@ -306,6 +375,7 @@ export const getBill = async (req: Request, res: Response) => {
             roomTotal,
             foodTotal,
             tax: 0,
+            discount,
             grandTotal,
             paidAmount,
             remainingAmount,

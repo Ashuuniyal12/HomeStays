@@ -21,12 +21,18 @@ const BookingManager = () => {
         roomId: '',
         guestName: '',
         phoneNumber: '',
+        email: '', // New Field
         idType: 'Aadhar',
         idNumber: '',
         checkInDate: new Date().toISOString().split('T')[0],
         expectedCheckOutDate: '',
-        advancePayment: '' // New Field
+        advancePayment: '',
+        discount: '' // New Field
     });
+
+    // Guest Lookup State
+    const [foundGuest, setFoundGuest] = useState<any>(null);
+    const [isSearching, setIsSearching] = useState(false);
 
     // New Guest Creds
     const [newGuestCreds, setNewGuestCreds] = useState<any>(null);
@@ -72,17 +78,47 @@ const BookingManager = () => {
                 roomId: '',
                 guestName: '',
                 phoneNumber: '',
+                email: '',
                 idType: 'Aadhar',
                 idNumber: '',
                 checkInDate: new Date().toISOString().split('T')[0],
                 expectedCheckOutDate: '',
-                advancePayment: ''
+                advancePayment: '',
+                discount: ''
             });
+            setFoundGuest(null);
         } catch (err: any) {
             console.error(err);
             toast.error('Check-in failed: ' + (err.response?.data?.error || err.message));
         } finally {
             setIsProcessing(false);
+        }
+    };
+
+    const searchGuest = async (query: string) => {
+        if (!query || query.length < 3) return;
+        setIsSearching(true);
+        try {
+            const res = await axios.get(`/api/bookings/search-guest?query=${query}`);
+            if (res.data) {
+                setFoundGuest(res.data);
+                // Auto-fill available details if empty
+                setFormData(prev => ({
+                    ...prev,
+                    guestName: prev.guestName || res.data.name || '',
+                    phoneNumber: prev.phoneNumber || res.data.phoneNumber || '',
+                    email: prev.email || res.data.email || '',
+                    idType: prev.idType || res.data.idType || 'Aadhar',
+                    idNumber: prev.idNumber || res.data.idNumber || ''
+                }));
+                toast.success('Guest found!');
+            } else {
+                setFoundGuest(null);
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsSearching(false);
         }
     };
 
@@ -234,18 +270,88 @@ const BookingManager = () => {
                                 />
                             </div>
 
-                            {/* Phone Number */}
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1.5">Phone Number</label>
-                                <input
-                                    required
-                                    type="tel"
-                                    className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
-                                    value={formData.phoneNumber}
-                                    onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })}
-                                    placeholder="Mobile number string with country code"
-                                />
+                            {/* Email & Phone Group */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1.5">Phone Number</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            required
+                                            type="tel"
+                                            className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+                                            value={formData.phoneNumber}
+                                            onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })}
+                                            placeholder="Mobile number"
+                                            onBlur={(e) => searchGuest(e.target.value)}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => searchGuest(formData.phoneNumber)}
+                                            className="bg-blue-100 text-blue-600 p-2 rounded-md hover:bg-blue-200 transition"
+                                            title="Search Guest History"
+                                        >
+                                            <UserCheck size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1.5">Email (Optional)</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="email"
+                                            className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+                                            value={(formData as any).email}
+                                            onChange={e => setFormData({ ...formData, email: e.target.value } as any)}
+                                            placeholder="guest@example.com"
+                                            onBlur={(e) => searchGuest(e.target.value)}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => searchGuest((formData as any).email)}
+                                            className="bg-blue-100 text-blue-600 p-2 rounded-md hover:bg-blue-200 transition"
+                                            title="Search Guest History"
+                                        >
+                                            <UserCheck size={18} />
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
+
+                            {/* Guest History Banner */}
+                            {foundGuest && (
+                                <div className="col-span-2 bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm">
+                                    <p className="font-semibold text-blue-800 flex items-center gap-2">
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                        Returning Guest: {foundGuest.name}
+                                    </p>
+                                    {foundGuest.bookings && foundGuest.bookings.length > 0 ? (
+                                        <div className="mt-2 space-y-1">
+                                            <p className="text-xs text-gray-500 font-medium">Last 3 Visits:</p>
+                                            <div className="grid gap-1">
+                                                {foundGuest.bookings.slice(0, 3).map((b: any) => (
+                                                    <div key={b.id} className="text-xs bg-white p-2 rounded border border-blue-100 space-y-1">
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="font-medium text-gray-800">{new Date(b.checkIn).toLocaleDateString()}</span>
+                                                            <span className="text-gray-600">Room {b.room?.number} ({b.room?.type})</span>
+                                                        </div>
+                                                        <div className="flex justify-between text-gray-500 border-t border-dashed pt-1 mt-1">
+                                                            <span>Rate: ₹{b.room?.price}</span>
+                                                            {b.discount > 0 ? (
+                                                                <span className="text-green-600">Disc: -₹{b.discount}</span>
+                                                            ) : (
+                                                                <span>-</span>
+                                                            )}
+                                                            <span className="font-bold text-blue-600">Paid: ₹{b.billAmount}</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="text-xs text-blue-600 mt-1">No past bookings found for this account.</p>
+                                    )}
+                                </div>
+                            )}
 
                             {/* ID Details Group */}
                             <div className="grid grid-cols-2 gap-2">
@@ -298,21 +404,39 @@ const BookingManager = () => {
                                 />
                             </div>
 
-                            {/* Advance Payment */}
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1.5">Advance Payment (₹)</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span className="text-gray-500">₹</span>
+                            {/* Payment Section */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1.5">Advance Payment (₹)</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <span className="text-gray-500">₹</span>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            className="w-full border border-gray-300 pl-7 pr-3 py-2 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+                                            value={(formData as any).advancePayment}
+                                            onChange={e => setFormData({ ...formData, advancePayment: e.target.value } as any)}
+                                            placeholder="0.00"
+                                        />
                                     </div>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        className="w-full border border-gray-300 pl-7 pr-3 py-2 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
-                                        value={(formData as any).advancePayment}
-                                        onChange={e => setFormData({ ...formData, advancePayment: e.target.value } as any)}
-                                        placeholder="0.00"
-                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1.5">Discount (₹)</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <span className="text-green-600">-₹</span>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            className="w-full border border-green-200 pl-8 pr-3 py-2 rounded-md text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition bg-green-50/30"
+                                            value={(formData as any).discount}
+                                            onChange={e => setFormData({ ...formData, discount: e.target.value } as any)}
+                                            placeholder="0.00"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
