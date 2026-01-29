@@ -110,7 +110,11 @@ const RoomGantt: React.FC<RoomGanttProps> = ({ rooms, startDate, daysToShow = 14
                                         <div
                                             key={booking.id}
                                             className={`absolute top-2 bottom-2 rounded-md px-2 flex items-center text-xs text-white overflow-hidden whitespace-nowrap shadow-sm
-                                                ${booking.status === 'ACTIVE' ? 'bg-blue-500' : 'bg-gray-400'}
+                                                ${booking.status === 'ACTIVE' || booking.status === 'OCCUPIED' ? 'bg-blue-500 hover:bg-blue-600' :
+                                                    booking.status === 'CONFIRMED' || booking.status === 'RESERVED' ? 'bg-green-500 hover:bg-green-600' :
+                                                        booking.status === 'COMPLETED' ? 'bg-gray-400 hover:bg-gray-500' :
+                                                            'bg-slate-400'
+                                                } transition-colors
                                             `}
                                             style={style}
                                             title={`${booking.guest?.name || 'Guest'} (${new Date(booking.checkIn).toLocaleDateString()} - ${new Date(booking.checkOut).toLocaleDateString()})`}

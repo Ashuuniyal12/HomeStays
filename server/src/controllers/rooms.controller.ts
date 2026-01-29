@@ -14,7 +14,7 @@ export const getRooms = async (req: AuthRequest, res: Response) => {
 
         let include: any = {
             bookings: {
-                where: { status: 'ACTIVE' } // Default to active? Or all?
+                // Include all bookings for history/future view
             }
         };
 
