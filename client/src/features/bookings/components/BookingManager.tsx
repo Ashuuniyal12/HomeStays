@@ -24,7 +24,8 @@ const BookingManager = () => {
         idType: 'Aadhar',
         idNumber: '',
         checkInDate: new Date().toISOString().split('T')[0],
-        expectedCheckOutDate: ''
+        expectedCheckOutDate: '',
+        advancePayment: '' // New Field
     });
 
     // New Guest Creds
@@ -74,7 +75,8 @@ const BookingManager = () => {
                 idType: 'Aadhar',
                 idNumber: '',
                 checkInDate: new Date().toISOString().split('T')[0],
-                expectedCheckOutDate: ''
+                expectedCheckOutDate: '',
+                advancePayment: ''
             });
         } catch (err: any) {
             console.error(err);
@@ -295,6 +297,24 @@ const BookingManager = () => {
                                     onChange={e => setFormData({ ...formData, expectedCheckOutDate: e.target.value })}
                                 />
                             </div>
+
+                            {/* Advance Payment */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1.5">Advance Payment (₹)</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span className="text-gray-500">₹</span>
+                                    </div>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        className="w-full border border-gray-300 pl-7 pr-3 py-2 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+                                        value={(formData as any).advancePayment}
+                                        onChange={e => setFormData({ ...formData, advancePayment: e.target.value } as any)}
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                            </div>
                         </div>
                         <div className="mt-5">
                             <button
@@ -305,7 +325,7 @@ const BookingManager = () => {
                             </button>
                         </div>
                     </form>
-                </div>
+                </div >
             )}
 
             {/* Bookings List */}
@@ -412,26 +432,28 @@ const BookingManager = () => {
             </div>
 
             {/* Bill View Modal */}
-            {selectedBookingId && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full relative animate-in zoom-in-95 duration-200">
-                        <button
-                            onClick={() => setSelectedBookingId(null)}
-                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition z-10"
-                        >
-                            <X size={28} />
-                        </button>
-                        <BillView
-                            bookingId={selectedBookingId}
-                            isAdmin={true}
-                            onCheckout={() => handleCheckOut(selectedBookingId)}
-                            readonly={viewMode === 'HISTORY'}
-                            isProcessing={isProcessing}
-                        />
+            {
+                selectedBookingId && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+                        <div className="bg-white rounded-lg shadow-xl max-w-md w-full relative animate-in zoom-in-95 duration-200">
+                            <button
+                                onClick={() => setSelectedBookingId(null)}
+                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition z-10"
+                            >
+                                <X size={28} />
+                            </button>
+                            <BillView
+                                bookingId={selectedBookingId}
+                                isAdmin={true}
+                                onCheckout={() => handleCheckOut(selectedBookingId)}
+                                readonly={viewMode === 'HISTORY'}
+                                isProcessing={isProcessing}
+                            />
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 

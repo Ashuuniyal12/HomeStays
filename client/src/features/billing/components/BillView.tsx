@@ -84,9 +84,21 @@ const BillView = ({ bookingId, isAdmin = false, onCheckout, readonly = false, is
 
 
 
-            <div className="border-t pt-4 mt-4 flex justify-between items-center text-xl font-bold">
-                <span>Total Pay</span>
-                <span className="text-blue-600">₹{bill.grandTotal.toFixed(2)}</span>
+            <div className="border-t pt-4 mt-4 space-y-2">
+                <div className="flex justify-between items-center text-gray-600">
+                    <span>Grand Total</span>
+                    <span>₹{bill.grandTotal?.toFixed(2)}</span>
+                </div>
+                {bill.paidAmount > 0 && (
+                    <div className="flex justify-between items-center text-green-600">
+                        <span>Advance Paid</span>
+                        <span>-₹{bill.paidAmount?.toFixed(2)}</span>
+                    </div>
+                )}
+                <div className="flex justify-between items-center text-xl font-bold border-t pt-2">
+                    <span>Remaining Payable</span>
+                    <span className="text-blue-600">₹{bill.remainingAmount?.toFixed(2)}</span>
+                </div>
             </div>
 
             {isAdmin && !readonly ? (

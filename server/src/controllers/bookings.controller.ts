@@ -45,7 +45,7 @@ const generateUsername = (guestName: string): string => {
 };
 
 export const createBooking = async (req: Request, res: Response) => {
-    const { roomId, guestName, checkInDate, expectedCheckOutDate, phoneNumber, idType, idNumber } = req.body;
+    const { roomId, guestName, checkInDate, expectedCheckOutDate, phoneNumber, idType, idNumber, advancePayment } = req.body;
 
     try {
         // 1. Create Guest User
@@ -73,7 +73,8 @@ export const createBooking = async (req: Request, res: Response) => {
                 checkIn: new Date(checkInDate),
                 checkOut: new Date(expectedCheckOutDate),
                 status: 'ACTIVE',
-                plainPassword: tempPassword
+                plainPassword: tempPassword,
+                paidAmount: advancePayment ? parseFloat(advancePayment) : 0
             }
         });
 
@@ -297,12 +298,17 @@ export const getBill = async (req: Request, res: Response) => {
 
         // 3. Tax (Removed)
         const tax = 0;
+        const grandTotal = roomTotal + foodTotal;
+        const paidAmount = booking.paidAmount || 0;
+        const remainingAmount = grandTotal - paidAmount;
 
         res.json({
             roomTotal,
             foodTotal,
             tax: 0,
-            grandTotal: roomTotal + foodTotal,
+            grandTotal,
+            paidAmount,
+            remainingAmount,
             breakdown: {
                 days: diffDays,
                 roomRate: booking.room.price,
