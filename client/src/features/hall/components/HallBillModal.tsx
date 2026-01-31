@@ -18,7 +18,9 @@ const HallBillModal: React.FC<HallBillModalProps> = ({ booking, isOpen, onClose,
 
     // Calculate food total
     const foodTotal = booking.menuItems?.reduce((sum: number, item: any) => {
-        return sum + (item.menuItem?.price || 0) * (item.quantity || 1);
+        // Handle both custom items (direct price) and catalog items (menuItem.price)
+        const price = item.price || item.menuItem?.price || 0;
+        return sum + (price * (item.quantity || 1));
     }, 0) || 0;
 
     const rentAmount = booking.totalAmount || 0;
@@ -82,7 +84,12 @@ const HallBillModal: React.FC<HallBillModalProps> = ({ booking, isOpen, onClose,
                             <div>
                                 <p className="text-xs text-blue-600 font-medium uppercase tracking-wider">Event Details</p>
                                 <p className="font-bold text-gray-900">{new Date(booking.eventDate).toLocaleDateString()}</p>
-                                <p className="text-sm text-gray-600 text-blue-700 capitalize">{booking.session.replace('_', ' ')} • {booking.purpose}</p>
+                                <div className="text-sm text-gray-600 text-blue-700 capitalize">
+                                    {booking.session.replace('_', ' ')} • {booking.purpose}
+                                </div>
+                                <div className="text-xs font-bold text-gray-500 mt-1">
+                                    {booking.guestCount ? `${booking.guestCount} Guests` : 'Guests N/A'}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -99,7 +106,7 @@ const HallBillModal: React.FC<HallBillModalProps> = ({ booking, isOpen, onClose,
                                     <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
                                     Hall Rent (Fixed)
                                 </span>
-                                <span className="font-mono font-semibold">₹{rentAmount.toFixed(2)}</span>
+                                <span className="font-semibold">₹{rentAmount.toFixed(2)}</span>
                             </div>
 
                             {extraAmount > 0 && (
@@ -108,7 +115,7 @@ const HallBillModal: React.FC<HallBillModalProps> = ({ booking, isOpen, onClose,
                                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
                                         Extra Charges
                                     </span>
-                                    <span className="font-mono font-semibold">₹{extraAmount.toFixed(2)}</span>
+                                    <span className="font-semibold">₹{extraAmount.toFixed(2)}</span>
                                 </div>
                             )}
 
@@ -119,16 +126,23 @@ const HallBillModal: React.FC<HallBillModalProps> = ({ booking, isOpen, onClose,
                                         <Utensils size={16} className="text-orange-500" />
                                         Menu & Catering
                                     </span>
-                                    <span className="font-mono">₹{foodTotal.toFixed(2)}</span>
+                                    <span className="font-semibold">₹{foodTotal.toFixed(2)}</span>
                                 </div>
                                 {booking.menuItems?.length > 0 ? (
                                     <div className="bg-gray-50 rounded-lg p-3 space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
-                                        {booking.menuItems.map((item: any, idx: number) => (
-                                            <div key={idx} className="flex justify-between text-sm text-gray-600">
-                                                <span>{item.menuItem?.name} <span className="text-gray-400 text-xs pl-1">x{item.quantity}</span></span>
-                                                <span className="font-mono">₹{((item.menuItem?.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
-                                            </div>
-                                        ))}
+                                        {booking.menuItems.map((item: any, idx: number) => {
+                                            const name = item.name || item.menuItem?.name || 'Unknown Item';
+                                            const price = item.price || item.menuItem?.price || 0;
+                                            const qty = item.quantity || 1;
+                                            const total = price * qty;
+
+                                            return (
+                                                <div key={idx} className="flex justify-between text-sm text-gray-600">
+                                                    <span>{name} <span className="text-gray-400 text-xs pl-1">x{qty}</span></span>
+                                                    <span className="font-semibold">₹{total.toFixed(2)}</span>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 ) : (
                                     <p className="text-xs text-gray-400 italic text-center py-2">No menu items selected</p>
@@ -141,22 +155,22 @@ const HallBillModal: React.FC<HallBillModalProps> = ({ booking, isOpen, onClose,
                     <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 space-y-3">
                         <div className="flex justify-between items-center text-gray-500">
                             <span>Grand Total</span>
-                            <span className="font-mono text-lg font-bold text-gray-900">₹{grandTotal.toFixed(2)}</span>
+                            <span className="text-lg font-bold text-gray-900">₹{grandTotal.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between items-center text-green-600 text-sm">
                             <span>Advance Amount Paid</span>
-                            <span className="font-mono">-₹{advancePaid.toFixed(2)}</span>
+                            <span className="font-semibold">-₹{advancePaid.toFixed(2)}</span>
                         </div>
                         {previousPayments > 0 && (
                             <div className="flex justify-between items-center text-green-600 text-sm">
                                 <span>Previous Payments</span>
-                                <span className="font-mono">-₹{previousPayments.toFixed(2)}</span>
+                                <span className="font-semibold">-₹{previousPayments.toFixed(2)}</span>
                             </div>
                         )}
                         <div className="h-px bg-gray-200 my-2"></div>
                         <div className="flex justify-between items-center">
                             <span className="text-lg font-bold text-gray-800">Total Remaining</span>
-                            <span className="text-2xl font-black text-blue-600 font-mono">₹{remainingPayable.toFixed(2)}</span>
+                            <span className="text-2xl font-black text-blue-600">₹{remainingPayable.toFixed(2)}</span>
                         </div>
                     </div>
                 </div>

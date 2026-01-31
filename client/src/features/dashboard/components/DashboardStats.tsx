@@ -12,8 +12,11 @@ import {
     TrendingUp,
     Plus,
     Clock,
-    ArrowRight
+    ArrowRight,
+    Sparkles
 } from 'lucide-react';
+import HallAvailabilityCalendar from '../../hall/components/HallAvailabilityCalendar';
+import RoomBookingCalendar from '../../bookings/components/RoomBookingCalendar';
 import { useAuth } from '../../auth/auth.store';
 import { motion } from 'framer-motion';
 
@@ -34,6 +37,10 @@ interface Stats {
     };
     revenue: {
         today: number;
+    };
+    hall: {
+        todayEvents: number;
+        upcomingEvents: number;
     };
 }
 
@@ -239,6 +246,26 @@ const DashboardStats = ({ navigate }: DashboardStatsProps) => {
                     iconColor="text-orange-600"
                     onClick={() => navigate('kitchen')}
                 />
+            </div>
+
+            {/* Availability Overview Section - Two Calendars */}
+            <div className="space-y-6">
+                <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <CalendarCheck className="text-blue-600" />
+                    Availability Overview
+                </h3>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Party Hall Calendar */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                        <HallAvailabilityCalendar />
+                    </div>
+
+                    {/* Room Booking Calendar */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                        <RoomBookingCalendar />
+                    </div>
+                </div>
             </div>
 
             {/* Secondary Info / Revenue Card for Mobile */}

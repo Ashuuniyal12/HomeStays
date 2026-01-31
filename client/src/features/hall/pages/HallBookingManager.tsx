@@ -10,6 +10,12 @@ import HallBookingList from '../components/HallBookingList';
 const HallBookingManager = () => {
     const [view, setView] = useState<'calendar' | 'guests'>('calendar');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
+
+    const handleSuccess = () => {
+        setIsModalOpen(false);
+        setRefreshKey(prev => prev + 1);
+    };
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500" style={{ fontFamily: '"Inter", sans-serif' }}>
@@ -53,17 +59,17 @@ const HallBookingManager = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     {/* Calendar Section - Smaller width */}
                     <div className="lg:col-span-4 h-fit bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <HallAvailabilityCalendar />
+                        <HallAvailabilityCalendar key={`cal-${refreshKey}`} />
                     </div>
 
                     {/* Booking List Section - Remaining width */}
                     <div className="lg:col-span-8">
-                        <HallBookingList />
+                        <HallBookingList key={`list-${refreshKey}`} />
                     </div>
                 </div>
             ) : (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <HallGuestList />
+                    <HallGuestList key={`guest-${refreshKey}`} />
                 </div>
             )}
 
@@ -71,11 +77,7 @@ const HallBookingManager = () => {
                 <NewHallBookingModal
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
-                    onSuccess={() => {
-                        setIsModalOpen(false);
-                        // Trigger refresh if needed
-                        window.location.reload();
-                    }}
+                    onSuccess={handleSuccess}
                 />
             )}
         </div>

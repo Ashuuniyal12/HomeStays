@@ -64,6 +64,25 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         });
         const revenueToday = bookingsCompletedToday.reduce((sum, b) => sum + b.billAmount, 0);
 
+        // 5. Hall Stats (Added)
+        const hallBookingsToday = await prisma.hallBooking.count({
+            where: {
+                eventDate: {
+                    gte: startOfDay,
+                    lt: endOfDay
+                }
+            }
+        });
+
+        const upcomingHallEvents = await prisma.hallBooking.count({
+            where: {
+                eventDate: {
+                    gte: new Date()
+                },
+                status: 'CONFIRMED'
+            }
+        });
+
         res.json({
             rooms: {
                 total: totalRooms,
@@ -81,6 +100,10 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             },
             revenue: {
                 today: revenueToday
+            },
+            hall: {
+                todayEvents: hallBookingsToday,
+                upcomingEvents: upcomingHallEvents
             }
         });
 

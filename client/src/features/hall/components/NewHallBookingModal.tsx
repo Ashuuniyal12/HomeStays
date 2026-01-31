@@ -32,10 +32,42 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
         eventDate: '',
         session: 'FULL_DAY', // MORNING, EVENING, FULL_DAY
         purpose: 'Engagement',
-        menuItemIds: [] as number[],
+        guestCount: '',
+        customMenuItems: [] as { name: string; price: number; quantity: number }[],
         totalAmount: 0,
         advanceAmount: 0
     });
+
+    // Custom Menu Builder State
+    const [newItem, setNewItem] = useState({ name: '', price: '', quantity: '' });
+
+    const addMenuItem = () => {
+        if (!newItem.name || !newItem.price || !newItem.quantity) return;
+        setFormData(prev => ({
+            ...prev,
+            customMenuItems: [...prev.customMenuItems, {
+                name: newItem.name,
+                price: parseFloat(newItem.price),
+                quantity: parseInt(newItem.quantity)
+            }]
+        }));
+        setNewItem({ name: '', price: '', quantity: '' });
+    };
+
+    const removeMenuItem = (index: number) => {
+        setFormData(prev => ({
+            ...prev,
+            customMenuItems: prev.customMenuItems.filter((_, i) => i !== index)
+        }));
+    };
+
+    // Auto-calculate Total Amount when menu items change
+    useEffect(() => {
+        const menuTotal = formData.customMenuItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        if (menuTotal > 0) {
+            setFormData(prev => ({ ...prev, totalAmount: menuTotal }));
+        }
+    }, [formData.customMenuItems]);
 
     useEffect(() => {
         // Fetch menu items for selection
@@ -54,17 +86,6 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
 
     const handleChange = (field: string, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }));
-    };
-
-    const toggleMenuItem = (id: number) => {
-        setFormData(prev => {
-            const current = prev.menuItemIds;
-            if (current.includes(id)) {
-                return { ...prev, menuItemIds: current.filter(itemId => itemId !== id) };
-            } else {
-                return { ...prev, menuItemIds: [...current, id] };
-            }
-        });
     };
 
     const handleSubmit = async () => {
@@ -195,26 +216,81 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
                                     </select>
                                 </div>
                             </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Number of Guests</label>
+                                <input
+                                    type="number"
+                                    className="mt-1 w-full border rounded-lg px-3 py-2"
+                                    value={formData.guestCount}
+                                    onChange={e => handleChange('guestCount', e.target.value)}
+                                    placeholder="Enter expected count"
+                                />
+                            </div>
                         </div>
                     )}
 
                     {step === 3 && (
-                        <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                            <p className="text-sm text-gray-500 mb-3">Select items for the party menu</p>
-                            <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
-                                {menuItems.map(item => (
-                                    <div
-                                        key={item.id}
-                                        onClick={() => toggleMenuItem(item.id)}
-                                        className={`p-3 rounded-lg border cursor-pointer transition flex justify-between items-center ${formData.menuItemIds.includes(item.id) ? 'bg-blue-50 border-blue-500' : 'bg-white border-gray-200 hover:border-blue-300'}`}
-                                    >
-                                        <div>
-                                            <p className="font-semibold text-sm">{item.name}</p>
-                                            <p className="text-xs text-gray-500">{item.category} • ₹{item.price}</p>
-                                        </div>
-                                        {formData.menuItemIds.includes(item.id) && <CheckCircle size={16} className="text-blue-600" />}
+                        <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-4">
+                            <div className="border bg-gray-50 p-4 rounded-xl space-y-3">
+                                <h4 className="text-sm font-bold text-gray-700 uppercase">Add Custom Item</h4>
+                                <div className="grid grid-cols-12 gap-3">
+                                    <div className="col-span-12 md:col-span-5">
+                                        <input
+                                            placeholder="Item Name (e.g. Veg Thali)"
+                                            className="w-full border rounded-lg px-3 py-2 text-sm"
+                                            value={newItem.name}
+                                            onChange={e => setNewItem({ ...newItem, name: e.target.value })}
+                                        />
                                     </div>
-                                ))}
+                                    <div className="col-span-4 md:col-span-3">
+                                        <input
+                                            placeholder="Price"
+                                            type="number"
+                                            className="w-full border rounded-lg px-3 py-2 text-sm"
+                                            value={newItem.price}
+                                            onChange={e => setNewItem({ ...newItem, price: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="col-span-4 md:col-span-2">
+                                        <input
+                                            placeholder="Qty"
+                                            type="number"
+                                            className="w-full border rounded-lg px-3 py-2 text-sm"
+                                            value={newItem.quantity}
+                                            onChange={e => setNewItem({ ...newItem, quantity: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="col-span-4 md:col-span-2">
+                                        <button
+                                            onClick={addMenuItem}
+                                            className="w-full bg-blue-600 text-white rounded-lg py-2 text-sm font-bold hover:bg-blue-700"
+                                        >
+                                            Add
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <h4 className="text-sm font-semibold text-gray-500">Menu Items ({formData.customMenuItems.length})</h4>
+                                <div className="space-y-2 max-h-48 overflow-y-auto">
+                                    {formData.customMenuItems.map((item, idx) => (
+                                        <div key={idx} className="flex justify-between items-center bg-white border p-3 rounded-lg shadow-sm">
+                                            <div>
+                                                <p className="font-bold text-gray-800">{item.name}</p>
+                                                <p className="text-xs text-gray-500">₹{item.price} x {item.quantity} = ₹{item.price * item.quantity}</p>
+                                            </div>
+                                            <button onClick={() => removeMenuItem(idx)} className="text-red-500 hover:bg-red-50 p-1.5 rounded-full transition">
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {formData.customMenuItems.length === 0 && (
+                                        <div className="text-center py-8 text-gray-400 border-2 border-dashed rounded-xl">
+                                            No items added yet
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     )}
@@ -231,8 +307,16 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
                                     <span className="font-medium">{formData.purpose} on {formData.eventDate} ({formData.session})</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-gray-500">Menu Items</span>
-                                    <span className="font-medium">{formData.menuItemIds.length} items selected</span>
+                                    <span className="text-gray-500">Guests</span>
+                                    <span className="font-medium">{formData.guestCount} People</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Menu</span>
+                                    <span className="font-medium text-right">
+                                        {formData.customMenuItems.map((i, idx) => (
+                                            <div key={idx}>{i.name} x {i.quantity}</div>
+                                        ))}
+                                    </span>
                                 </div>
                             </div>
 

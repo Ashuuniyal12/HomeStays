@@ -8,7 +8,7 @@ export const createHallBooking = async (req: Request, res: Response) => {
     const {
         guestName, guestPhone, guestAddress, guestEmail,
         eventDate, session, purpose,
-        menuItemIds, totalAmount, advanceAmount
+        customMenuItems, totalAmount, advanceAmount, guestCount // Added guestCount and replaced menuItemIds with customMenuItems
     } = req.body;
 
     try {
@@ -47,17 +47,18 @@ export const createHallBooking = async (req: Request, res: Response) => {
                     status: 'CONFIRMED',
                     totalAmount: parseFloat(totalAmount),
                     advanceAmount: parseFloat(advanceAmount),
-                    extraAmount: 0
+                    extraAmount: 0,
+                    guestCount: parseInt(guestCount || '0') // Add guestCount
                 }
             });
 
-            // 3. Add Menu Items
-            if (menuItemIds && menuItemIds.length > 0) {
-                // Ensure IDs are integers
-                const bookingItems = menuItemIds.map((itemId: any) => ({
+            // 3. Add Custom Menu Items
+            if (customMenuItems && customMenuItems.length > 0) {
+                const bookingItems = customMenuItems.map((item: any) => ({
                     hallBookingId: booking.id,
-                    menuItemId: parseInt(itemId),
-                    quantity: 1 // Default per plate indicator
+                    name: item.name,
+                    price: parseFloat(item.price),
+                    quantity: parseInt(item.quantity) || 1
                 }));
 
                 await tx.hallBookingItem.createMany({
@@ -155,7 +156,6 @@ export const updateHallBookingPayment = async (req: Request, res: Response) => {
         const updatedBooking = await prisma.hallBooking.update({
             where: { id },
             data: {
-                // @ts-ignore
                 paidAmount: parseFloat(paidAmount),
                 status: 'COMPLETED' // Assume full settlement completes the booking
             }
@@ -164,6 +164,6 @@ export const updateHallBookingPayment = async (req: Request, res: Response) => {
         res.json(updatedBooking);
     } catch (err) {
         console.error('Update Payment Error:', err);
-        res.status(500).json({ error: 'Failed to update payment' }); 
+        res.status(500).json({ error: 'Failed to update payment' });
     }
 };

@@ -111,6 +111,7 @@ model HallBooking {
   session       String            // MORNING, EVENING, FULL_DAY
   purpose       String            // Engagement, Birthday, Mundan, etc.
   status        String            // CONFIRMED, COMPLETED, CANCELLED
+  guestCount    Int               @default(0)
   
   totalAmount   Float             @default(0)
   advanceAmount Float             @default(0)
@@ -127,9 +128,11 @@ model HallBooking {
 model HallBookingItem {
   id            String      @id @default(uuid())
   hallBookingId String
-  menuItemId    Int
+  menuItemId    Int?
+  name          String      @default("")
+  price         Float       @default(0)
   quantity      Int         @default(1)
   
   booking       HallBooking @relation(fields: [hallBookingId], references: [id])
-  menuItem      MenuItem    @relation(fields: [menuItemId], references: [id])
+  menuItem      MenuItem?   @relation(fields: [menuItemId], references: [id])
 }

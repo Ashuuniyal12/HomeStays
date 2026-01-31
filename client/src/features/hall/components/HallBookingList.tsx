@@ -92,12 +92,16 @@ const HallBookingList = () => {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-3 py-3 border-y border-dashed border-gray-100">
+                                    <div className="grid grid-cols-3 gap-3 py-3 border-y border-dashed border-gray-100">
                                         <div className="space-y-1">
                                             <p className="text-[10px] font-bold text-gray-400 uppercase">Event Date</p>
                                             <p className="text-sm font-bold text-gray-800">{eventDate.toLocaleDateString()}</p>
                                         </div>
-                                        <div className="space-y-1">
+                                        <div className="space-y-1 text-center">
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase">Guests</p>
+                                            <p className="text-sm font-bold text-gray-800">{booking.guestCount || '-'}</p>
+                                        </div>
+                                        <div className="space-y-1 text-right">
                                             <p className="text-[10px] font-bold text-gray-400 uppercase">Session</p>
                                             <p className="text-sm font-bold text-blue-700 capitalize">{booking.session.replace('_', ' ')}</p>
                                         </div>

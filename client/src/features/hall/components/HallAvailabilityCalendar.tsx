@@ -47,7 +47,10 @@ const HallAvailabilityCalendar = () => {
             <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                     <CalIcon className="text-blue-600" />
-                    {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    <span>Party Hall Bookings</span>
+                    <span className="text-sm font-normal text-gray-500">
+                        ({currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })})
+                    </span>
                 </h3>
                 <div className="flex gap-2">
                     <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-gray-100 rounded-full"><ChevronLeft /></button>
