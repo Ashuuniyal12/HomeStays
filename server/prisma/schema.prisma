@@ -69,6 +69,7 @@ model MenuItem {
   isVeg       Boolean
   available   Boolean     @default(true)
   orderItems  OrderItem[]
+  hallBookingItems HallBookingItem[]
 }
 
 model Order {
@@ -90,4 +91,44 @@ model OrderItem {
   price      Float
   menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
   order      Order    @relation(fields: [orderId], references: [id])
+}
+
+model HallGuest {
+  id          String        @id @default(uuid())
+  name        String
+  phoneNumber String
+  address     String?
+  email       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  bookings    HallBooking[]
+}
+
+model HallBooking {
+  id            String            @id @default(uuid())
+  hallGuestId   String
+  eventDate     DateTime
+  session       String            // MORNING, EVENING, FULL_DAY
+  purpose       String            // Engagement, Birthday, Mundan, etc.
+  status        String            // CONFIRMED, COMPLETED, CANCELLED
+  
+  totalAmount   Float             @default(0)
+  advanceAmount Float             @default(0)
+  extraAmount   Float             @default(0)
+  
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  
+  guest         HallGuest         @relation(fields: [hallGuestId], references: [id])
+  menuItems     HallBookingItem[]
+}
+
+model HallBookingItem {
+  id            String      @id @default(uuid())
+  hallBookingId String
+  menuItemId    Int
+  quantity      Int         @default(1)
+  
+  booking       HallBooking @relation(fields: [hallBookingId], references: [id])
+  menuItem      MenuItem    @relation(fields: [menuItemId], references: [id])
 }

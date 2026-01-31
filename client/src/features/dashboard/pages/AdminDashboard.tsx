@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../auth/auth.store';
-import { LogOut, Home, Coffee, Users, DollarSign, Utensils, CalendarCheck } from 'lucide-react';
+import { LogOut, Home, Coffee, Users, DollarSign, Utensils, CalendarCheck, BarChart3, Sparkles } from 'lucide-react';
 
 import RoomManager from '../../rooms/components/RoomManager';
 import GuestManager from '../../guests/components/GuestManager';
@@ -11,7 +11,8 @@ import MenuManager from '../../menu/components/MenuManager';
 import BillingManager from '../../billing/components/BillingDashboard';
 import DashboardStats from '../components/DashboardStats';
 import ReportsPage from './ReportsPage';
-import { LayoutDashboard, BarChart3 } from 'lucide-react';
+import HallBookingManager from '../../hall/pages/HallBookingManager';
+import { LayoutDashboard } from 'lucide-react';
 
 const AdminDashboard = () => {
     const { logout, user } = useAuth();
@@ -32,6 +33,7 @@ const AdminDashboard = () => {
                     <NavItem icon={<Users size={20} />} label="Guests" active={activeTab === 'guests'} onClick={() => setActiveTab('guests')} />
                     <NavItem icon={<Utensils size={20} />} label="Menu" active={activeTab === 'menu'} onClick={() => setActiveTab('menu')} />
                     <NavItem icon={<Coffee size={20} />} label="Kitchen" active={activeTab === 'kitchen'} onClick={() => setActiveTab('kitchen')} />
+                    <NavItem icon={<Sparkles size={20} />} label="Party Hall" active={activeTab === 'hall'} onClick={() => setActiveTab('hall')} />
                     {user?.role === 'OWNER' && (
                         <>
                             <NavItem icon={<DollarSign size={20} />} label="Billing" active={activeTab === 'billing'} onClick={() => setActiveTab('billing')} />
@@ -61,6 +63,7 @@ const AdminDashboard = () => {
                 {activeTab === 'kitchen' && <KitchenOrders />}
                 {activeTab === 'billing' && <BillingManager />}
                 {activeTab === 'reports' && <ReportsPage />}
+                {activeTab === 'hall' && <HallBookingManager />}
             </div>
         </div>
     );
