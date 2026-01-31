@@ -9,9 +9,13 @@ import {
     CalendarCheck,
     CalendarX,
     DollarSign,
-    TrendingUp
+    TrendingUp,
+    Plus,
+    Clock,
+    ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../../auth/auth.store';
+import { motion } from 'framer-motion';
 
 interface Stats {
     rooms: {
@@ -33,10 +37,20 @@ interface Stats {
     };
 }
 
-const DashboardStats = () => {
+interface DashboardStatsProps {
+    navigate: (tab: string) => void;
+}
+
+const DashboardStats = ({ navigate }: DashboardStatsProps) => {
     const { user } = useAuth();
     const [stats, setStats] = useState<Stats | null>(null);
     const [loading, setLoading] = useState(true);
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+        return () => clearInterval(timer);
+    }, []);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -82,129 +96,163 @@ const DashboardStats = () => {
         return 'Good Evening';
     };
 
-    const StatCard = ({ icon, label, value, subLabel, colorClass, iconColor, trend }: any) => (
-        <div className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl border border-gray-100 transition-all duration-300 transform hover:-translate-y-1 group">
-            <div className="flex items-start justify-between">
-                <div className="flex-1">
-                    <p className="text-gray-500 text-sm font-medium uppercase tracking-wide">{label}</p>
-                    <h3 className="text-3xl font-bold text-gray-900 mt-2 group-hover:text-blue-600 transition-colors">{value}</h3>
-                    {subLabel && <p className="text-xs text-gray-400 mt-2">{subLabel}</p>}
-                    {trend && <p className="text-xs text-green-600 font-semibold mt-1 flex items-center gap-1">
-                        <TrendingUp size={12} /> {trend}
-                    </p>}
+    const QuickAction = ({ icon, label, desc, onClick, color }: any) => (
+        <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onClick}
+            className={`flex items-center p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all text-left group w-full`}
+        >
+            <div className={`p-3 rounded-lg ${color} text-white mr-4 shadow-sm group-hover:shadow-md transition-shadow`}>
+                {icon}
+            </div>
+            <div>
+                <h4 className="font-bold text-gray-800">{label}</h4>
+                <p className="text-xs text-gray-500">{desc}</p>
+            </div>
+            <ArrowRight className="ml-auto text-gray-300 group-hover:text-gray-600 transition-colors" size={18} />
+        </motion.button>
+    );
+
+    const StatCard = ({ icon, label, value, subLabel, colorClass, iconColor, onClick }: any) => (
+        <motion.div
+            whileHover={{ y: -4 }}
+            className={`bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group ${onClick ? 'cursor-pointer' : ''}`}
+            onClick={onClick}
+        >
+            <div className={`absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity ${iconColor}`}>
+                {React.cloneElement(icon, { size: 64 })}
+            </div>
+
+            <div className="relative z-10 flex flex-col h-full justify-between">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${colorClass}`}>
+                    {React.cloneElement(icon, { className: iconColor, size: 24 })}
                 </div>
-                <div className={`p-3 rounded-xl ${colorClass} transition-transform group-hover:scale-110 duration-300`}>
-                    {React.cloneElement(icon, { className: `${iconColor}` })}
+                <div>
+                    <h3 className="text-3xl font-bold text-gray-900 mb-1">{value}</h3>
+                    <p className="text-sm font-medium text-gray-500">{label}</p>
+                    {subLabel && <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">{subLabel}</p>}
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
-            {/* Greeting Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-lg">
-                <h1 className="text-3xl font-bold mb-2">{getGreeting()}, {user?.name || 'Owner'}! 👋</h1>
-                <p className="text-blue-100">Here's what's happening at Laxmi Jawahar Homestay today</p>
+        <div className="space-y-8 animate-fade-in max-w-7xl mx-auto pb-10">
+            {/* Hero Section */}
+            <div className="flex flex-col md:flex-row justify-between items-end gap-6 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                <div>
+                    <div className="flex items-center gap-2 text-gray-500 text-sm font-medium mb-2">
+                        <Clock size={16} />
+                        {currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    </div>
+                    <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                        {getGreeting()}, <span className="text-blue-600">{user?.name}</span>
+                    </h1>
+                    <p className="text-gray-500">Here's your daily overview for Laxmi Jawahar Homestay.</p>
+                </div>
+                <div className="text-right hidden md:block">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-bold">
+                        <DollarSign size={16} />
+                        Revenue Today: ₹{stats.revenue.today.toLocaleString()}
+                    </div>
+                </div>
             </div>
 
-            {/* Revenue Highlight */}
-            <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white shadow-xl">
+            {/* Quick Actions */}
+            <div>
+                <h3 className="text-lg font-bold text-gray-800 mb-4 px-1">Quick Actions</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <QuickAction
+                        icon={<Plus size={20} />}
+                        label="New Booking"
+                        desc="Create a reservation"
+                        onClick={() => navigate('bookings')}
+                        color="bg-blue-600"
+                    />
+                    <QuickAction
+                        icon={<CheckCircle size={20} />}
+                        label="Check In"
+                        desc="Arriving guests"
+                        onClick={() => navigate('bookings')}
+                        color="bg-teal-500"
+                    />
+                    <QuickAction
+                        icon={<Utensils size={20} />}
+                        label="Kitchen"
+                        desc="View active orders"
+                        onClick={() => navigate('kitchen')}
+                        color="bg-orange-500"
+                    />
+                    <QuickAction
+                        icon={<Users size={20} />}
+                        label="Guests"
+                        desc="Manage content"
+                        onClick={() => navigate('guests')}
+                        color="bg-purple-500"
+                    />
+                </div>
+            </div>
+
+            {/* Main Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Available Rooms - Key Metric */}
+                <StatCard
+                    icon={<Bed />}
+                    label="Available Rooms"
+                    value={stats.rooms.available}
+                    subLabel={`${stats.rooms.occupied} occupied / ${stats.rooms.total} total`}
+                    colorClass="bg-emerald-50"
+                    iconColor="text-emerald-600"
+                    onClick={() => navigate('rooms')}
+                />
+
+                {/* Check-ins */}
+                <StatCard
+                    icon={<CalendarCheck />}
+                    label="Check-ins Today"
+                    value={stats.bookings.checkIns}
+                    subLabel="Expected arrivals"
+                    colorClass="bg-blue-50"
+                    iconColor="text-blue-600"
+                    onClick={() => navigate('bookings')}
+                />
+
+                {/* Check-outs */}
+                <StatCard
+                    icon={<CalendarX />}
+                    label="Check-outs Today"
+                    value={stats.bookings.checkOuts}
+                    subLabel="Expected departures"
+                    colorClass="bg-indigo-50"
+                    iconColor="text-indigo-600"
+                    onClick={() => navigate('bookings')}
+                />
+
+                {/* Pending Orders */}
+                <StatCard
+                    icon={<Utensils />}
+                    label="Pending Orders"
+                    value={stats.orders.pending}
+                    subLabel={`${stats.orders.deliveredToday} delivered today`}
+                    colorClass="bg-orange-50"
+                    iconColor="text-orange-600"
+                    onClick={() => navigate('kitchen')}
+                />
+            </div>
+
+            {/* Secondary Info / Revenue Card for Mobile */}
+            <div className="md:hidden bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-lg">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-emerald-100 text-sm font-medium uppercase tracking-wide">Today's Revenue</p>
-                        <h2 className="text-4xl font-bold mt-2">₹{stats.revenue.today.toLocaleString()}</h2>
-                        <p className="text-emerald-100 text-sm mt-2">Completed bookings and orders</p>
+                        <p className="text-blue-100 text-sm font-medium uppercase tracking-wide">Today's Revenue</p>
+                        <h2 className="text-3xl font-bold mt-1">₹{stats.revenue.today.toLocaleString()}</h2>
                     </div>
-                    <div className="bg-white/20 p-4 rounded-xl">
-                        <DollarSign size={40} />
+                    <div className="bg-white/20 p-3 rounded-xl">
+                        <DollarSign size={24} />
                     </div>
                 </div>
             </div>
-
-            {/* Rooms Section */}
-            <section>
-                <div className="flex items-center gap-2 mb-4">
-                    <div className="w-1 h-6 bg-blue-600 rounded"></div>
-                    <h2 className="text-xl font-bold text-gray-800">Room Status</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <StatCard
-                        icon={<Bed size={28} />}
-                        label="Total Rooms"
-                        value={stats.rooms.total}
-                        colorClass="bg-blue-50"
-                        iconColor="text-blue-600"
-                    />
-                    <StatCard
-                        icon={<CheckCircle size={28} />}
-                        label="Available"
-                        value={stats.rooms.available}
-                        colorClass="bg-green-50"
-                        iconColor="text-green-600"
-                    />
-                    <StatCard
-                        icon={<Users size={28} />}
-                        label="Occupied"
-                        value={stats.rooms.occupied}
-                        subLabel="Currently in use"
-                        colorClass="bg-purple-50"
-                        iconColor="text-purple-600"
-                    />
-                </div>
-            </section>
-
-            {/* Booking Activity */}
-            <section>
-                <div className="flex items-center gap-2 mb-4">
-                    <div className="w-1 h-6 bg-teal-600 rounded"></div>
-                    <h2 className="text-xl font-bold text-gray-800">Today's Activity</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <StatCard
-                        icon={<CalendarCheck size={28} />}
-                        label="Check-Ins"
-                        value={stats.bookings.checkIns}
-                        subLabel="Guests arriving today"
-                        colorClass="bg-teal-50"
-                        iconColor="text-teal-600"
-                    />
-                    <StatCard
-                        icon={<CalendarX size={28} />}
-                        label="Check-Outs"
-                        value={stats.bookings.checkOuts}
-                        subLabel="Guests departing today"
-                        colorClass="bg-orange-50"
-                        iconColor="text-orange-600"
-                    />
-                </div>
-            </section>
-
-            {/* Kitchen & Orders */}
-            <section>
-                <div className="flex items-center gap-2 mb-4">
-                    <div className="w-1 h-6 bg-red-600 rounded"></div>
-                    <h2 className="text-xl font-bold text-gray-800">Kitchen & Orders</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <StatCard
-                        icon={<Utensils size={28} />}
-                        label="Pending Orders"
-                        value={stats.orders.pending}
-                        subLabel="Awaiting preparation"
-                        colorClass="bg-red-50"
-                        iconColor="text-red-600"
-                    />
-                    <StatCard
-                        icon={<CheckCircle size={28} />}
-                        label="Delivered Today"
-                        value={stats.orders.deliveredToday}
-                        subLabel="Successfully completed"
-                        colorClass="bg-emerald-50"
-                        iconColor="text-emerald-600"
-                    />
-                </div>
-            </section>
         </div>
     );
 };

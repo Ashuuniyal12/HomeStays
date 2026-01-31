@@ -11,14 +11,19 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
 
     if (!token) return res.sendStatus(401);
 
-    jwt.verify(token, process.env.JWT_SECRET || 'secret', (err: any, user: any) => {
-        if (err) {
-            console.error('JWT Verify Error:', err);
-            return res.sendStatus(403);
-        }
-        req.user = user;
-        next();
-    });
+    try {
+        jwt.verify(token, process.env.JWT_SECRET || 'secret', (err: any, user: any) => {
+            if (err) {
+                console.error('JWT Verify Error:', err.message);
+                return res.sendStatus(403);
+            }
+            req.user = user;
+            next();
+        });
+    } catch (e) {
+        console.error('JWT Verify Exception:', e);
+        res.sendStatus(403);
+    }
 };
 
 export const authorizeRole = (roles: string[]) => {
