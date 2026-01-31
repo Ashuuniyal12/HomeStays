@@ -271,7 +271,7 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
                     <button
                         onClick={() => setStep(s => Math.max(1, s - 1))}
                         disabled={step === 1}
-                        className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded-lg disabled:opacity-50 transition"
+                        className="px-4 py-2 text-red-600 font-medium hover:bg-red-50 rounded-lg disabled:opacity-50 transition"
                     >
                         Back
                     </button>
@@ -283,7 +283,7 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
                                 (step === 1 && !formData.guestName) ||
                                 (step === 2 && !formData.eventDate)
                             }
-                            className="flex items-center gap-2 px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Next <ChevronRight size={18} />
                         </button>

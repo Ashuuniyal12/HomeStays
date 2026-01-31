@@ -124,3 +124,46 @@ export const checkHallAvailability = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Failed to check availability' });
     }
 };
+
+// --- Get All Hall Guests ---
+export const getHallGuests = async (req: Request, res: Response) => {
+    try {
+        const guests = await prisma.hallGuest.findMany({
+            include: {
+                bookings: {
+                    orderBy: { eventDate: 'desc' }
+                }
+            },
+            orderBy: { name: 'asc' }
+        });
+        res.json(guests);
+    } catch (err) {
+        console.error('Get Hall Guests Error:', err);
+        res.status(500).json({ error: 'Failed to fetch hall guests' });
+    }
+};
+
+// --- Update Payment / Settle Bill ---
+export const updateHallBookingPayment = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { paidAmount } = req.body;
+
+    try {
+        const booking = await prisma.hallBooking.findUnique({ where: { id } });
+        if (!booking) return res.status(404).json({ error: 'Booking not found' });
+
+        const updatedBooking = await prisma.hallBooking.update({
+            where: { id },
+            data: {
+                // @ts-ignore
+                paidAmount: parseFloat(paidAmount),
+                status: 'COMPLETED' // Assume full settlement completes the booking
+            }
+        });
+
+        res.json(updatedBooking);
+    } catch (err) {
+        console.error('Update Payment Error:', err);
+        res.status(500).json({ error: 'Failed to update payment' }); 
+    }
+};
