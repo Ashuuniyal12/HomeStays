@@ -19,14 +19,14 @@ const HallBookingManager = () => {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500" style={{ fontFamily: '"Inter", sans-serif' }}>
-            <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-800">Party Hall Management</h2>
                     <p className="text-gray-500">Manage bookings for weddings, parties, and events.</p>
                 </div>
                 <button
                     onClick={() => setIsModalOpen(true)}
-                    className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+                    className="w-full md:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all transform hover:-translate-y-0.5 active:scale-95"
                 >
                     <Plus size={20} />
                     New Hall Booking
@@ -34,21 +34,21 @@ const HallBookingManager = () => {
             </div>
 
             {/* View Toggle */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 bg-gray-100/50 p-1 rounded-lg w-fit">
                 <button
                     onClick={() => setView('calendar')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${view === 'calendar'
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'text-gray-600 hover:bg-gray-100'
+                    className={`px-4 py-2 rounded-lg font-medium transition-all text-sm sm:text-base ${view === 'calendar'
+                        ? 'bg-white text-blue-700 shadow-sm'
+                        : 'text-gray-600 hover:bg-gray-200'
                         }`}
                 >
                     Calendar & Bookings
                 </button>
                 <button
                     onClick={() => setView('guests')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${view === 'guests'
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'text-gray-600 hover:bg-gray-100'
+                    className={`px-4 py-2 rounded-lg font-medium transition-all text-sm sm:text-base ${view === 'guests'
+                        ? 'bg-white text-blue-700 shadow-sm'
+                        : 'text-gray-600 hover:bg-gray-200'
                         }`}
                 >
                     Guests

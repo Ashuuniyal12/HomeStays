@@ -149,40 +149,40 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
                 </div>
 
                 {/* Stepper */}
-                <div className="flex justify-between px-8 py-4 bg-gray-50 border-b">
+                <div className="flex justify-between px-4 sm:px-8 py-4 bg-gray-50 border-b overflow-x-auto">
                     {steps.map((s, idx) => (
-                        <div key={s.id} className={`flex flex-col items-center gap-1 ${step >= s.id ? 'text-blue-600' : 'text-gray-400'}`}>
+                        <div key={s.id} className={`flex flex-col items-center gap-1 min-w-[60px] ${step >= s.id ? 'text-blue-600' : 'text-gray-400'}`}>
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all 
                                 ${step >= s.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-gray-300'}
                                 ${step === s.id ? 'ring-4 ring-blue-100' : ''}
                             `}>
                                 {s.icon}
                             </div>
-                            <span className="text-xs font-medium">{s.title}</span>
+                            <span className="text-[10px] sm:text-xs font-medium text-center whitespace-nowrap">{s.title}</span>
                         </div>
                     ))}
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6">
                     {step === 1 && (
                         <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Guest Name <span className="text-red-500">*</span></label>
                                 <input
                                     type="text"
-                                    className="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                     value={formData.guestName}
                                     onChange={e => handleChange('guestName', e.target.value)}
                                     placeholder="Enter full name"
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Phone Number <span className="text-red-500">*</span></label>
                                     <input
                                         type="tel"
-                                        className="mt-1 w-full border rounded-lg px-3 py-2"
+                                        className="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                         value={formData.guestPhone}
                                         onChange={e => handleChange('guestPhone', e.target.value)}
                                         placeholder="Mobile number"
@@ -192,7 +192,7 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
                                     <label className="block text-sm font-medium text-gray-700">Email (Optional)</label>
                                     <input
                                         type="email"
-                                        className="mt-1 w-full border rounded-lg px-3 py-2"
+                                        className="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                         value={formData.guestEmail}
                                         onChange={e => handleChange('guestEmail', e.target.value)}
                                     />
@@ -201,7 +201,7 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Address</label>
                                 <textarea
-                                    className="mt-1 w-full border rounded-lg px-3 py-2"
+                                    className="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                     rows={3}
                                     value={formData.guestAddress}
                                     onChange={e => handleChange('guestAddress', e.target.value)}
@@ -216,16 +216,16 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
                                 <label className="block text-sm font-medium text-gray-700">Event Date <span className="text-red-500">*</span></label>
                                 <input
                                     type="date"
-                                    className="mt-1 w-full border rounded-lg px-3 py-2"
+                                    className="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                     value={formData.eventDate}
                                     onChange={e => handleChange('eventDate', e.target.value)}
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Session</label>
                                     <select
-                                        className="mt-1 w-full border rounded-lg px-3 py-2"
+                                        className="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                         value={formData.session}
                                         onChange={e => handleChange('session', e.target.value)}
                                     >
@@ -237,7 +237,7 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Purpose</label>
                                     <select
-                                        className="mt-1 w-full border rounded-lg px-3 py-2"
+                                        className="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                         value={formData.purpose}
                                         onChange={e => handleChange('purpose', e.target.value)}
                                     >
@@ -254,7 +254,7 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
                                 <label className="block text-sm font-medium text-gray-700">Number of Guests <span className="text-red-500">*</span></label>
                                 <input
                                     type="number"
-                                    className="mt-1 w-full border rounded-lg px-3 py-2"
+                                    className="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                     value={formData.guestCount}
                                     onChange={e => handleChange('guestCount', e.target.value)}
                                     placeholder="Enter expected count"
@@ -267,8 +267,8 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
                         <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-4">
                             <div className="border bg-gray-50 p-4 rounded-xl space-y-3">
                                 <h4 className="text-sm font-bold text-gray-700 uppercase">Add Custom Item</h4>
-                                <div className="grid grid-cols-12 gap-3">
-                                    <div className="col-span-12 md:col-span-5">
+                                <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                                    <div className="md:col-span-5">
                                         <input
                                             placeholder="Item Name (e.g. Veg Thali)"
                                             className="w-full border rounded-lg px-3 py-2 text-sm"
@@ -276,28 +276,30 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
                                             onChange={e => setNewItem({ ...newItem, name: e.target.value })}
                                         />
                                     </div>
-                                    <div className="col-span-4 md:col-span-3">
-                                        <input
-                                            placeholder="Price"
-                                            type="number"
-                                            className="w-full border rounded-lg px-3 py-2 text-sm"
-                                            value={newItem.price}
-                                            onChange={e => setNewItem({ ...newItem, price: e.target.value })}
-                                        />
+                                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:col-span-5">
+                                        <div className="col-span-1 md:col-span-3">
+                                            <input
+                                                placeholder="Price"
+                                                type="number"
+                                                className="w-full border rounded-lg px-3 py-2 text-sm"
+                                                value={newItem.price}
+                                                onChange={e => setNewItem({ ...newItem, price: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="col-span-1 md:col-span-2">
+                                            <input
+                                                placeholder="Qty"
+                                                type="number"
+                                                className="w-full border rounded-lg px-3 py-2 text-sm"
+                                                value={newItem.quantity}
+                                                onChange={e => setNewItem({ ...newItem, quantity: e.target.value })}
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="col-span-4 md:col-span-2">
-                                        <input
-                                            placeholder="Qty"
-                                            type="number"
-                                            className="w-full border rounded-lg px-3 py-2 text-sm"
-                                            value={newItem.quantity}
-                                            onChange={e => setNewItem({ ...newItem, quantity: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="col-span-4 md:col-span-2">
+                                    <div className="md:col-span-2">
                                         <button
                                             onClick={addMenuItem}
-                                            className="w-full bg-blue-600 text-white rounded-lg py-2 text-sm font-bold hover:bg-blue-700"
+                                            className="w-full bg-blue-600 text-white rounded-lg py-2 text-sm font-bold hover:bg-blue-700 transition active:scale-95"
                                         >
                                             Add
                                         </button>
@@ -307,7 +309,7 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
 
                             <div className="space-y-2">
                                 <h4 className="text-sm font-semibold text-gray-500">Menu Items ({formData.customMenuItems.length})</h4>
-                                <div className="space-y-2 max-h-48 overflow-y-auto">
+                                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                                     {formData.customMenuItems.map((item, idx) => (
                                         <div key={idx} className="flex justify-between items-center bg-white border p-3 rounded-lg shadow-sm">
                                             <div>
@@ -354,7 +356,7 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Total Amount (Quote) <span className="text-red-500">*</span></label>
                                     <div className="relative mt-1">

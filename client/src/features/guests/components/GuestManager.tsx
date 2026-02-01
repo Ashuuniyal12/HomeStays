@@ -65,7 +65,63 @@ const GuestManager = () => {
 
             {/* Guest Table */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <div className="overflow-x-auto">
+                {/* Mobile Card View */}
+                <div className="block md:hidden divide-y divide-gray-100">
+                    {loading ? (
+                        <div className="p-8 text-center">
+                            <Loader size={32} className="mx-auto text-blue-500" />
+                        </div>
+                    ) : guests.length === 0 ? (
+                        <div className="p-8 text-center text-gray-500">No guests found.</div>
+                    ) : (
+                        guests.map((guest) => (
+                            <div
+                                key={guest.id}
+                                onClick={() => handleRowClick(guest.id)}
+                                className="p-4 hover:bg-gray-50 active:bg-blue-50 transition-colors cursor-pointer space-y-3"
+                            >
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <h3 className="font-bold text-gray-900">{guest.name}</h3>
+                                        <p className="text-xs text-gray-500 font-mono">@{guest.username}</p>
+                                    </div>
+                                    {(() => {
+                                        const count = guest.bookings ? guest.bookings.length : 0;
+                                        let tier = 'Normal';
+                                        let style = 'bg-green-50 text-green-700 border-green-200';
+                                        if (count >= 10) { tier = 'Diamond'; style = 'bg-blue-100 text-blue-700 border-blue-300'; }
+                                        else if (count >= 7) { tier = 'Gold'; style = 'bg-yellow-100 text-yellow-700 border-yellow-300'; }
+                                        else if (count >= 3) { tier = 'Silver'; style = 'bg-gray-100 text-gray-700 border-gray-300'; }
+                                        return (
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${style}`}>
+                                                {tier}
+                                            </span>
+                                        );
+                                    })()}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <div className="flex items-center gap-2 text-gray-600">
+                                        <Phone size={14} className="text-gray-400 shrink-0" />
+                                        <span className="truncate">{guest.phoneNumber || '--'}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-gray-600">
+                                        <FileText size={14} className="text-gray-400 shrink-0" />
+                                        <span className="truncate">{guest.idNumber || '--'}</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 text-xs text-gray-500 pt-2 border-t border-dashed border-gray-100">
+                                    <Calendar size={12} />
+                                    Last Visit: {guest.bookings?.[0] ? new Date(guest.bookings[0].checkIn).toLocaleDateString() : 'N/A'}
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-gray-50 border-b border-gray-200 text-xs uppercase text-gray-500 font-semibold">
@@ -80,13 +136,13 @@ const GuestManager = () => {
                         <tbody className="divide-y divide-gray-100">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={5} className="p-8 text-center">
+                                    <td colSpan={6} className="p-8 text-center">
                                         <Loader size={32} className="mx-auto text-blue-500" />
                                     </td>
                                 </tr>
                             ) : guests.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="p-8 text-center text-gray-500">No guests found.</td>
+                                    <td colSpan={6} className="p-8 text-center text-gray-500">No guests found.</td>
                                 </tr>
                             ) : (
                                 guests.map((guest) => (

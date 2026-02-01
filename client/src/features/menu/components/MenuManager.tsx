@@ -110,13 +110,14 @@ const MenuManager = () => {
                 </div>
             )}
 
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 text-left">
                 <div>
+                    <h2 className="text-2xl font-bold text-gray-800">Menu Management</h2>
                     <p className="text-gray-500 mt-1">Manage your food items, prices, and availability</p>
                 </div>
                 <button
                     onClick={() => openModal()}
-                    className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg font-semibold shadow-lg hover:bg-blue-700 transition transform hover:-translate-y-0.5"
+                    className="w-full md:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg font-semibold shadow-lg hover:bg-blue-700 transition transform hover:-translate-y-0.5"
                 >
                     <Plus size={20} />
                     Add New Item
@@ -124,11 +125,11 @@ const MenuManager = () => {
             </div>
 
             {/* Menu Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 md:gap-6">
                 {items.map(item => (
                     <div
                         key={item.id}
-                        className={`relative bg-white p-4 rounded-xl shadow-sm border-l-4 border-y border-r flex justify-between items-start transition hover:shadow-md overflow-hidden ${!item.available ? 'border-gray-200' :
+                        className={`relative bg-white p-4 rounded-xl shadow-sm border-l-4 border-y border-r flex flex-row items-start transition hover:shadow-md overflow-hidden ${!item.available ? 'border-gray-200' :
                             item.isVeg ? 'border-l-green-500 border-y-green-100 border-r-green-100' :
                                 'border-l-red-500 border-y-red-100 border-r-red-100'
                             }`}
@@ -201,15 +202,15 @@ const MenuManager = () => {
             {/* Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="flex justify-between items-center p-6 border-b">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+                        <div className="flex justify-between items-center p-6 border-b shrink-0">
                             <h2 className="text-xl font-bold text-gray-900">{editingItem ? 'Edit Menu Item' : 'Add New Item'}</h2>
                             <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition">
                                 <X size={24} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-6">
+                        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <div className="md:col-span-2">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Item Name <span className="text-red-500">*</span></label>
@@ -258,8 +259,8 @@ const MenuManager = () => {
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between pt-4 border-t">
-                                <label className="flex items-center cursor-pointer select-none">
+                            <div className="flex flex-col gap-6 pt-4 border-t">
+                                <label className="flex items-center cursor-pointer select-none border p-3 rounded-lg hover:bg-gray-50 transition">
                                     <div className="relative">
                                         <input
                                             type="checkbox"
@@ -270,20 +271,20 @@ const MenuManager = () => {
                                         <div className={`w-11 h-6 rounded-full transition-colors ${formData.isVeg ? 'bg-green-500' : 'bg-gray-200'}`}></div>
                                         <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full shadow transition-transform ${formData.isVeg ? 'transform translate-x-5' : ''}`}></div>
                                     </div>
-                                    <span className="ml-3 text-sm font-medium text-gray-700">{formData.isVeg ? 'Vegetarian' : 'Non-Vegetarian'}</span>
+                                    <span className="ml-3 text-sm font-bold text-gray-700">{formData.isVeg ? 'Vegetarian' : 'Non-Vegetarian'}</span>
                                 </label>
 
                                 <div className="flex gap-3">
                                     <button
                                         type="button"
                                         onClick={() => setIsModalOpen(false)}
-                                        className="px-5 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg transition"
+                                        className="flex-1 px-5 py-3 text-gray-600 font-medium hover:bg-gray-100 rounded-lg transition border border-gray-200"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
-                                        className="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition transform active:scale-95"
+                                        className="flex-1 px-6 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition transform active:scale-95"
                                     >
                                         {editingItem ? 'Save Changes' : 'Create Item'}
                                     </button>

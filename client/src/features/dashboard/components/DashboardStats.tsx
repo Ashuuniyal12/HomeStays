@@ -169,32 +169,32 @@ const DashboardStats = ({ navigate }: DashboardStatsProps) => {
             {/* Quick Actions */}
             <div>
                 <h3 className="text-lg font-bold text-gray-800 mb-4 px-1">Quick Actions</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <QuickAction
                         icon={<Plus size={20} />}
                         label="New Booking"
-                        desc="Create a reservation"
+                        desc="Create"
                         onClick={() => navigate('bookings')}
                         color="bg-blue-600"
                     />
                     <QuickAction
                         icon={<CheckCircle size={20} />}
                         label="Check In"
-                        desc="Arriving guests"
+                        desc="Arrive"
                         onClick={() => navigate('bookings')}
                         color="bg-teal-500"
                     />
                     <QuickAction
                         icon={<Utensils size={20} />}
                         label="Kitchen"
-                        desc="View active orders"
+                        desc="Orders"
                         onClick={() => navigate('kitchen')}
                         color="bg-orange-500"
                     />
                     <QuickAction
                         icon={<Users size={20} />}
                         label="Guests"
-                        desc="Manage content"
+                        desc="Manage"
                         onClick={() => navigate('guests')}
                         color="bg-purple-500"
                     />
@@ -202,7 +202,7 @@ const DashboardStats = ({ navigate }: DashboardStatsProps) => {
             </div>
 
             {/* Main Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 {/* Available Rooms - Key Metric */}
                 <StatCard
                     icon={<Bed />}

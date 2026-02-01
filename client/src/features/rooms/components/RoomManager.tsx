@@ -145,11 +145,11 @@ const RoomManager = () => {
 
             {/* Gantt Chart Section */}
             <section className="space-y-4">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <h3 className="text-xl font-semibold text-gray-800">Room Availability</h3>
 
                     {/* Improved Date Shifter */}
-                    <div className="flex items-center bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
+                    <div className="flex items-center bg-white border border-gray-200 rounded-lg p-1 shadow-sm w-full md:w-auto justify-between">
                         <button
                             onClick={() => shiftDate(-7)}
                             className="p-2 hover:bg-gray-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors"
@@ -170,7 +170,12 @@ const RoomManager = () => {
                         </button>
                     </div>
                 </div>
-                <RoomGantt rooms={rooms} startDate={startDate} daysToShow={14} />
+                {/* Scrollable Container for Mobile */}
+                <div className="overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0">
+                    <div className="min-w-[800px]">
+                        <RoomGantt rooms={rooms} startDate={startDate} daysToShow={14} />
+                    </div>
+                </div>
             </section>
 
             {/* Split View: My Rooms & Today's Status */}
@@ -180,17 +185,17 @@ const RoomManager = () => {
                 <div className="lg:col-span-8 space-y-6">
                     <div className="flex justify-between items-center">
                         <h3 className="text-xl font-semibold">My Rooms</h3>
-                        <button onClick={() => setIsAdding(!isAdding)} className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition-colors flex items-center gap-2">
+                        <button onClick={() => setIsAdding(!isAdding)} className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm md:text-base">
                             {isAdding ? 'Cancel' : <span>+ Add New Room</span>}
                         </button>
                     </div>
 
                     {/* Add Room Form */}
                     {isAdding && (
-                        <div className="bg-white p-6 rounded-lg shadow border animate-fade-in mb-6">
+                        <div className="bg-white p-4 md:p-6 rounded-lg shadow border animate-fade-in mb-6">
                             <h3 className="text-lg font-bold mb-4">Add New Room</h3>
                             <form onSubmit={handleAddRoom} className="space-y-4">
-                                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 items-start">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-start">
                                     <div className="lg:col-span-1">
                                         <label className="block text-sm font-bold mb-1">Room Number <span className="text-red-500">*</span></label>
                                         <input required type="text" className="w-full border p-2 rounded" value={newRoom.number} onChange={e => setNewRoom({ ...newRoom, number: e.target.value })} />
@@ -231,16 +236,18 @@ const RoomManager = () => {
                                 </div>
 
                                 {/* Amenities Checkboxes */}
-                                <div className="flex gap-6 border-t pt-4">
-                                    <div className="flex items-center space-x-2">
-                                        <input type="checkbox" id="addHasBalcony" className="w-4 h-4" checked={newRoom.hasBalcony} onChange={e => setNewRoom({ ...newRoom, hasBalcony: e.target.checked })} />
-                                        <label htmlFor="addHasBalcony" className="text-sm font-bold">Balcony</label>
+                                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 border-t pt-4">
+                                    <div className="flex gap-6">
+                                        <div className="flex items-center space-x-2">
+                                            <input type="checkbox" id="addHasBalcony" className="w-4 h-4" checked={newRoom.hasBalcony} onChange={e => setNewRoom({ ...newRoom, hasBalcony: e.target.checked })} />
+                                            <label htmlFor="addHasBalcony" className="text-sm font-bold">Balcony</label>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <input type="checkbox" id="addIsAC" className="w-4 h-4" checked={newRoom.isAC} onChange={e => setNewRoom({ ...newRoom, isAC: e.target.checked })} />
+                                            <label htmlFor="addIsAC" className="text-sm font-bold">AC</label>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center space-x-2">
-                                        <input type="checkbox" id="addIsAC" className="w-4 h-4" checked={newRoom.isAC} onChange={e => setNewRoom({ ...newRoom, isAC: e.target.checked })} />
-                                        <label htmlFor="addIsAC" className="text-sm font-bold">AC</label>
-                                    </div>
-                                    <button type="submit" className="ml-auto bg-green-600 text-white px-6 py-2 rounded font-bold hover:bg-green-700">Save Room</button>
+                                    <button type="submit" className="w-full sm:w-auto ml-auto bg-green-600 text-white px-6 py-2 rounded font-bold hover:bg-green-700">Save Room</button>
                                 </div>
                             </form>
                         </div>

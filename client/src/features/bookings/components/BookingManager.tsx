@@ -224,16 +224,16 @@ const BookingManager = () => {
             )}
 
             {/* Header with Tabs and New Check-in Button */}
-            <div className="flex justify-between items-center">
-                <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex gap-2 bg-gray-100 p-1 rounded-lg w-full sm:w-auto">
                     <button
                         onClick={() => setViewMode('ACTIVE')}
-                        className={`px-6 py-2.5 rounded-lg font-semibold transition-all ${viewMode === 'ACTIVE'
+                        className={`flex-1 sm:flex-none px-4 sm:px-6 py-2.5 rounded-lg font-semibold transition-all text-sm sm:text-base whitespace-nowrap ${viewMode === 'ACTIVE'
                             ? 'bg-white text-blue-600 shadow-md'
                             : 'text-gray-600 hover:text-gray-900'
                             }`}
                     >
-                        Active Bookings
+                        Active
                         {bookings.length > 0 && (
                             <span className="ml-2 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">
                                 {bookings.length}
@@ -242,19 +242,19 @@ const BookingManager = () => {
                     </button>
                     <button
                         onClick={() => setViewMode('HISTORY')}
-                        className={`px-6 py-2.5 rounded-lg font-semibold transition-all ${viewMode === 'HISTORY'
+                        className={`flex-1 sm:flex-none px-4 sm:px-6 py-2.5 rounded-lg font-semibold transition-all text-sm sm:text-base whitespace-nowrap ${viewMode === 'HISTORY'
                             ? 'bg-white text-blue-600 shadow-md'
                             : 'text-gray-600 hover:text-gray-900'
                             }`}
                     >
-                        Past Bookings
+                        History
                     </button>
                 </div>
 
                 {viewMode === 'ACTIVE' && (
                     <button
                         onClick={() => setShowForm(!showForm)}
-                        className="flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                        className="w-full sm:w-auto flex items-center justify-center gap-1.5 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                     >
                         {showForm ? <X size={16} /> : <Plus size={16} />}
                         {showForm ? 'Cancel' : 'New Check-in'}
@@ -265,13 +265,13 @@ const BookingManager = () => {
             {/* Check-in Form */}
             {showForm && viewMode === 'ACTIVE' && (
                 <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden animate-in slide-in-from-top duration-300">
-                    <div className="bg-gray-50 border-b px-5 py-3">
+                    <div className="bg-gray-50 border-b px-4 sm:px-5 py-3">
                         <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
                             <LogIn size={18} />
                             Guest Check-in
                         </h3>
                     </div>
-                    <form onSubmit={handleCheckIn} className="p-5">
+                    <form onSubmit={handleCheckIn} className="p-4 sm:p-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-xs font-medium text-gray-600 mb-1.5">Select Room <span className="text-red-500">*</span></label>
@@ -300,7 +300,7 @@ const BookingManager = () => {
                             </div>
 
                             {/* Email & Phone Group */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 col-span-1 md:col-span-2">
                                 <div>
                                     <label className="block text-xs font-medium text-gray-600 mb-1.5">Phone Number <span className="text-red-500">*</span></label>
                                     <div className="flex gap-2">
@@ -346,10 +346,10 @@ const BookingManager = () => {
                                 </div>
                             </div>
 
-                            {/* Guest History Banner */}
+                            {/* Guest History Banner - Responsive Grid */}
                             {foundGuest && (
-                                <div className="col-span-2 bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm">
-                                    <div className="flex items-center gap-2">
+                                <div className="col-span-1 md:col-span-2 bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm">
+                                    <div className="flex flex-wrap items-center gap-2">
                                         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                                         <p className="font-semibold text-blue-800">
                                             Returning Guest: {foundGuest.name}
@@ -367,7 +367,7 @@ const BookingManager = () => {
                                     {foundGuest.bookings && foundGuest.bookings.length > 0 ? (
                                         <div className="mt-2 space-y-1">
                                             <p className="text-xs text-gray-500 font-medium">Last 3 Visits:</p>
-                                            <div className="grid gap-1">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                                                 {foundGuest.bookings.slice(0, 3).map((b: any) => (
                                                     <div key={b.id} className="text-xs bg-white p-2 rounded border border-blue-100 space-y-1">
                                                         <div className="flex justify-between items-center">
@@ -376,11 +376,6 @@ const BookingManager = () => {
                                                         </div>
                                                         <div className="flex justify-between text-gray-500 border-t border-dashed pt-1 mt-1">
                                                             <span>Rate: ₹{b.room?.price}</span>
-                                                            {b.discount > 0 ? (
-                                                                <span className="text-green-600">Disc: -₹{b.discount}</span>
-                                                            ) : (
-                                                                <span>-</span>
-                                                            )}
                                                             <span className="font-bold text-blue-600">Paid: ₹{b.billAmount}</span>
                                                         </div>
                                                     </div>
@@ -394,7 +389,7 @@ const BookingManager = () => {
                             )}
 
                             {/* ID Details Group */}
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 col-span-1 md:col-span-2">
                                 <div>
                                     <label className="block text-xs font-medium text-gray-600 mb-1.5">ID Type <span className="text-red-500">*</span></label>
                                     <select
@@ -445,7 +440,7 @@ const BookingManager = () => {
                             </div>
 
                             {/* Payment Section */}
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-4 col-span-1 md:col-span-2">
                                 <div>
                                     <label className="block text-xs font-medium text-gray-600 mb-1.5">Advance Payment (₹)</label>
                                     <div className="relative">
@@ -510,8 +505,8 @@ const BookingManager = () => {
                             className="bg-white rounded-lg shadow-sm hover:shadow-md border border-gray-200 transition-shadow duration-200 overflow-hidden"
                         >
                             <div className="p-4">
-                                <div className="flex justify-between items-start">
-                                    <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-6">
+                                <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                                    <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-4 w-full">
                                         {/* Room Info */}
                                         <div>
                                             <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Room</p>
@@ -522,19 +517,16 @@ const BookingManager = () => {
                                         </div>
 
                                         {/* Guest Info */}
-                                        <div>
+                                        <div className="col-span-2 sm:col-span-1">
                                             <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Guest</p>
-                                            <p className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                            <p className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
                                                 <User size={18} />
-                                                {booking.guest?.name}
+                                                <span className="truncate max-w-[120px]">{booking.guest?.name}</span>
                                             </p>
                                             {viewMode === 'ACTIVE' && (
                                                 <div className="mt-2 space-y-1">
                                                     <div className="text-xs text-gray-500">
                                                         User: <span className="font-mono text-gray-700 font-semibold">{booking.guest?.username}</span>
-                                                    </div>
-                                                    <div className="text-xs text-gray-500">
-                                                        Pass: <span className="font-mono text-gray-700 font-semibold">{booking.plainPassword || '****'}</span>
                                                     </div>
                                                 </div>
                                             )}
@@ -543,13 +535,9 @@ const BookingManager = () => {
                                         {/* Check-in Date */}
                                         <div>
                                             <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Check-in</p>
-                                            <p className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                                <LogIn size={18} className="text-green-600" />
-                                                {new Date(booking.checkIn).toLocaleDateString('en-US', {
-                                                    month: 'short',
-                                                    day: 'numeric',
-                                                    year: 'numeric'
-                                                })}
+                                            <p className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
+                                                <LogIn size={18} className="text-green-600 shrink-0" />
+                                                {new Date(booking.checkIn).toLocaleDateString()}
                                             </p>
                                         </div>
 
@@ -558,34 +546,30 @@ const BookingManager = () => {
                                             <p className="text-xs text-gray-500 uppercase font-semibold mb-1">
                                                 {viewMode === 'ACTIVE' ? 'Expected Out' : 'Checked Out'}
                                             </p>
-                                            <p className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                                <LogOut size={18} className="text-orange-600" />
-                                                {new Date(booking.checkOut).toLocaleDateString('en-US', {
-                                                    month: 'short',
-                                                    day: 'numeric',
-                                                    year: 'numeric'
-                                                })}
+                                            <p className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
+                                                <LogOut size={18} className="text-orange-600 shrink-0" />
+                                                {new Date(booking.checkOut).toLocaleDateString()}
                                             </p>
                                         </div>
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-dashed">
                                         {viewMode === 'ACTIVE' && (
                                             <button
                                                 onClick={() => setSelectedBookingForOrder(booking)}
-                                                className="flex items-center gap-1.5 text-orange-600 border border-orange-600 px-3 py-1.5 rounded-md text-sm font-medium hover:bg-orange-50 transition-colors"
+                                                className="flex-1 md:flex-none flex items-center justify-center gap-1.5 text-orange-600 border border-orange-600 px-3 py-1.5 rounded-md text-sm font-medium hover:bg-orange-50 transition-colors"
                                             >
                                                 <Utensils size={16} />
-                                                Add Order
+                                                Order
                                             </button>
                                         )}
                                         <button
                                             onClick={() => setSelectedBookingId(booking.id)}
-                                            className="flex items-center gap-1.5 text-blue-600 border border-blue-600 px-3 py-1.5 rounded-md text-sm font-medium hover:bg-blue-50 transition-colors"
+                                            className="flex-1 md:flex-none flex items-center justify-center gap-1.5 text-blue-600 border border-blue-600 px-3 py-1.5 rounded-md text-sm font-medium hover:bg-blue-50 transition-colors"
                                         >
                                             <CreditCard size={16} />
-                                            View Bill
+                                            Bill
                                         </button>
                                     </div>
                                 </div>
