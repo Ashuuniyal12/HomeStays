@@ -9,11 +9,16 @@ export default defineConfig({
     allowedHosts: 'all',
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        //locla dev
+        // target: 'http://localhost:3000',
+        target: 'https://homestays-server-7qfq.onrender.com',
         changeOrigin: true,
       },
       '/socket.io': {
-        target: 'http://localhost:3000',
+        //locla dev
+        // target: 'http://localhost:3000',
+        //production
+        target: 'https://homestays-server-7qfq.onrender.com',
         changeOrigin: true,
         ws: true
       }
