@@ -42,8 +42,24 @@ const RoomManager = () => {
         }
     };
 
+    const validateRoom = (room: any) => {
+        if (!room.number?.trim()) return "Room Number is required";
+        if (!room.type) return "Room Type is required";
+        if (parseFloat(room.price) <= 0 || isNaN(parseFloat(room.price))) return "Price must be greater than 0";
+        if (parseInt(room.occupancy) <= 0 || isNaN(parseInt(room.occupancy))) return "Occupancy must be greater than 0";
+        if (parseInt(room.bathroomCount) < 0 || isNaN(parseInt(room.bathroomCount))) return "Bathroom count cannot be negative";
+        return null;
+    };
+
     const handleAddRoom = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        const error = validateRoom(newRoom);
+        if (error) {
+            toast.error(error);
+            return;
+        }
+
         setIsProcessing(true);
         try {
             await axios.post('/api/rooms', newRoom);
@@ -69,6 +85,13 @@ const RoomManager = () => {
     const handleSaveEdit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editRoomData) return;
+
+        const error = validateRoom(editRoomData);
+        if (error) {
+            toast.error(error);
+            return;
+        }
+
         setIsProcessing(true);
         try {
             await axios.put(`/api/rooms/${editRoomData.id}`, {
@@ -169,11 +192,11 @@ const RoomManager = () => {
                             <form onSubmit={handleAddRoom} className="space-y-4">
                                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 items-start">
                                     <div className="lg:col-span-1">
-                                        <label className="block text-sm font-bold mb-1">Room Number</label>
+                                        <label className="block text-sm font-bold mb-1">Room Number <span className="text-red-500">*</span></label>
                                         <input required type="text" className="w-full border p-2 rounded" value={newRoom.number} onChange={e => setNewRoom({ ...newRoom, number: e.target.value })} />
                                     </div>
                                     <div className="lg:col-span-1">
-                                        <label className="block text-sm font-bold mb-1">Type</label>
+                                        <label className="block text-sm font-bold mb-1">Type <span className="text-red-500">*</span></label>
                                         <select className="w-full border p-2 rounded" value={newRoom.type} onChange={e => setNewRoom({ ...newRoom, type: e.target.value })}>
                                             <option value="Standard">Standard</option>
                                             <option value="Deluxe">Deluxe</option>
@@ -182,16 +205,16 @@ const RoomManager = () => {
                                         </select>
                                     </div>
                                     <div className="lg:col-span-1">
-                                        <label className="block text-sm font-bold mb-1">Price (₹)</label>
-                                        <input required type="number" className="w-full border p-2 rounded" value={newRoom.price} onChange={e => setNewRoom({ ...newRoom, price: e.target.value })} />
+                                        <label className="block text-sm font-bold mb-1">Price (₹) <span className="text-red-500">*</span></label>
+                                        <input required min="1" type="number" className="w-full border p-2 rounded" value={newRoom.price} onChange={e => setNewRoom({ ...newRoom, price: e.target.value })} />
                                     </div>
                                     <div className="lg:col-span-1">
-                                        <label className="block text-sm font-bold mb-1">Occupancy</label>
-                                        <input required type="number" className="w-full border p-2 rounded" value={newRoom.occupancy} onChange={e => setNewRoom({ ...newRoom, occupancy: e.target.value })} />
+                                        <label className="block text-sm font-bold mb-1">Occupancy <span className="text-red-500">*</span></label>
+                                        <input required min="1" type="number" className="w-full border p-2 rounded" value={newRoom.occupancy} onChange={e => setNewRoom({ ...newRoom, occupancy: e.target.value })} />
                                     </div>
                                     <div className="lg:col-span-1">
-                                        <label className="block text-sm font-bold mb-1">Bathrooms</label>
-                                        <input required type="number" min="1" className="w-full border p-2 rounded" value={newRoom.bathroomCount} onChange={e => setNewRoom({ ...newRoom, bathroomCount: e.target.value })} />
+                                        <label className="block text-sm font-bold mb-1">Bathrooms <span className="text-red-500">*</span></label>
+                                        <input required type="number" min="0" className="w-full border p-2 rounded" value={newRoom.bathroomCount} onChange={e => setNewRoom({ ...newRoom, bathroomCount: e.target.value })} />
                                     </div>
                                 </div>
 
@@ -239,7 +262,7 @@ const RoomManager = () => {
                         <h3 className="text-lg font-bold mb-4">Edit Room {editRoomData.number}</h3>
                         <form onSubmit={handleSaveEdit} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-bold mb-1">Room Number</label>
+                                <label className="block text-sm font-bold mb-1">Room Number <span className="text-red-500">*</span></label>
                                 <input required type="text" className="w-full border p-2 rounded" value={editRoomData.number} onChange={e => setEditRoomData({ ...editRoomData, number: e.target.value })} />
                             </div>
 
@@ -255,7 +278,7 @@ const RoomManager = () => {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-bold mb-1">Type</label>
+                                    <label className="block text-sm font-bold mb-1">Type <span className="text-red-500">*</span></label>
                                     <select className="w-full border p-2 rounded" value={editRoomData.type} onChange={e => setEditRoomData({ ...editRoomData, type: e.target.value })}>
                                         <option value="Standard">Standard</option>
                                         <option value="Deluxe">Deluxe</option>
@@ -275,12 +298,12 @@ const RoomManager = () => {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-bold mb-1">Price (₹)</label>
-                                    <input required type="number" className="w-full border p-2 rounded" value={editRoomData.price} onChange={e => setEditRoomData({ ...editRoomData, price: e.target.value })} />
+                                    <label className="block text-sm font-bold mb-1">Price (₹) <span className="text-red-500">*</span></label>
+                                    <input required min="1" type="number" className="w-full border p-2 rounded" value={editRoomData.price} onChange={e => setEditRoomData({ ...editRoomData, price: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-bold mb-1">Occupancy</label>
-                                    <input required type="number" className="w-full border p-2 rounded" value={editRoomData.occupancy} onChange={e => setEditRoomData({ ...editRoomData, occupancy: e.target.value })} />
+                                    <label className="block text-sm font-bold mb-1">Occupancy <span className="text-red-500">*</span></label>
+                                    <input required min="1" type="number" className="w-full border p-2 rounded" value={editRoomData.occupancy} onChange={e => setEditRoomData({ ...editRoomData, occupancy: e.target.value })} />
                                 </div>
                             </div>
 
@@ -294,8 +317,8 @@ const RoomManager = () => {
                                     <label htmlFor="editIsAC" className="text-sm font-medium">AC</label>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold mb-1">Bathrooms</label>
-                                    <input required type="number" min="1" className="w-full border p-2 rounded" value={editRoomData.bathroomCount || 1} onChange={e => setEditRoomData({ ...editRoomData, bathroomCount: e.target.value })} />
+                                    <label className="block text-xs font-bold mb-1">Bathrooms <span className="text-red-500">*</span></label>
+                                    <input required type="number" min="0" className="w-full border p-2 rounded" value={editRoomData.bathroomCount || 1} onChange={e => setEditRoomData({ ...editRoomData, bathroomCount: e.target.value })} />
                                 </div>
                             </div>
 

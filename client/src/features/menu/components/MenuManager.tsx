@@ -47,6 +47,11 @@ const MenuManager = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!formData.name.trim()) { toast.error("Item Name is required"); return; }
+        if (!formData.category) { toast.error("Category is required"); return; }
+        if (parseFloat(formData.price) < 0 || isNaN(parseFloat(formData.price))) { toast.error("Price must be a positive number"); return; }
+
         setLoadingOp(true);
         try {
             if (editingItem) {
@@ -124,8 +129,8 @@ const MenuManager = () => {
                     <div
                         key={item.id}
                         className={`relative bg-white p-4 rounded-xl shadow-sm border-l-4 border-y border-r flex justify-between items-start transition hover:shadow-md overflow-hidden ${!item.available ? 'border-gray-200' :
-                                item.isVeg ? 'border-l-green-500 border-y-green-100 border-r-green-100' :
-                                    'border-l-red-500 border-y-red-100 border-r-red-100'
+                            item.isVeg ? 'border-l-green-500 border-y-green-100 border-r-green-100' :
+                                'border-l-red-500 border-y-red-100 border-r-red-100'
                             }`}
                     >
                         {/* Out of Stock Pattern Overlay */}
@@ -207,7 +212,7 @@ const MenuManager = () => {
                         <form onSubmit={handleSubmit} className="p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Item Name <span className="text-red-500">*</span></label>
                                     <input
                                         required
                                         type="text"
@@ -219,7 +224,7 @@ const MenuManager = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Category <span className="text-red-500">*</span></label>
                                     <select
                                         className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white"
                                         value={formData.category}
@@ -230,7 +235,7 @@ const MenuManager = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Price (₹) <span className="text-red-500">*</span></label>
                                     <input
                                         required
                                         type="number"

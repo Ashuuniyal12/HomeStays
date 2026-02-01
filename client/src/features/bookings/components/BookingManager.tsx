@@ -64,8 +64,37 @@ const BookingManager = () => {
         }
     };
 
+    const validateCheckIn = (data: any) => {
+        if (!data.roomId) return "Please select a room";
+        if (!data.guestName?.trim()) return "Guest Name is required";
+        if (!data.phoneNumber) return "Phone Number is required";
+        if (data.phoneNumber.replace(/\D/g, '').length < 10) return "Phone number must be at least 10 digits";
+        if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) return "Invalid email format";
+        if (!data.idType) return "ID Type is required";
+        if (!data.idNumber?.trim()) return "ID Number is required";
+
+        if (!data.checkInDate) return "Check-in Date is required";
+        if (!data.expectedCheckOutDate) return "Expected Check-out Date is required";
+
+        const checkIn = new Date(data.checkInDate);
+        const checkOut = new Date(data.expectedCheckOutDate);
+        if (checkOut <= checkIn) return "Check-out date must be after check-in date";
+
+        if (parseFloat(data.advancePayment) < 0) return "Advance payment cannot be negative";
+        if (parseFloat(data.discount) < 0) return "Discount cannot be negative";
+
+        return null;
+    };
+
     const handleCheckIn = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        const error = validateCheckIn(formData);
+        if (error) {
+            toast.error(error);
+            return;
+        }
+
         setIsProcessing(true);
         try {
             const res = await axios.post('/api/bookings', formData);
@@ -245,7 +274,7 @@ const BookingManager = () => {
                     <form onSubmit={handleCheckIn} className="p-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1.5">Select Room</label>
+                                <label className="block text-xs font-medium text-gray-600 mb-1.5">Select Room <span className="text-red-500">*</span></label>
                                 <select
                                     required
                                     className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
@@ -259,7 +288,7 @@ const BookingManager = () => {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1.5">Guest Name</label>
+                                <label className="block text-xs font-medium text-gray-600 mb-1.5">Guest Name <span className="text-red-500">*</span></label>
                                 <input
                                     required
                                     type="text"
@@ -273,7 +302,7 @@ const BookingManager = () => {
                             {/* Email & Phone Group */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1.5">Phone Number</label>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1.5">Phone Number <span className="text-red-500">*</span></label>
                                     <div className="flex gap-2">
                                         <input
                                             required
@@ -327,9 +356,9 @@ const BookingManager = () => {
                                         </p>
                                         {foundGuest.stats && (
                                             <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${foundGuest.stats.tier === 'Diamond' ? 'bg-blue-100 text-blue-700 border-blue-300' :
-                                                    foundGuest.stats.tier === 'Gold' ? 'bg-yellow-100 text-yellow-700 border-yellow-300' :
-                                                        foundGuest.stats.tier === 'Silver' ? 'bg-gray-100 text-gray-700 border-gray-300' :
-                                                            'bg-green-50 text-green-700 border-green-200'
+                                                foundGuest.stats.tier === 'Gold' ? 'bg-yellow-100 text-yellow-700 border-yellow-300' :
+                                                    foundGuest.stats.tier === 'Silver' ? 'bg-gray-100 text-gray-700 border-gray-300' :
+                                                        'bg-green-50 text-green-700 border-green-200'
                                                 }`}>
                                                 {foundGuest.stats.tier} ({foundGuest.stats.totalVisits} visits)
                                             </span>
@@ -367,7 +396,7 @@ const BookingManager = () => {
                             {/* ID Details Group */}
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1.5">ID Type</label>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1.5">ID Type <span className="text-red-500">*</span></label>
                                     <select
                                         className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
                                         value={formData.idType}
@@ -382,7 +411,7 @@ const BookingManager = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1.5">ID Number</label>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1.5">ID Number <span className="text-red-500">*</span></label>
                                     <input
                                         required
                                         type="text"
@@ -395,7 +424,7 @@ const BookingManager = () => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1.5">Check-in Date</label>
+                                <label className="block text-xs font-medium text-gray-600 mb-1.5">Check-in Date <span className="text-red-500">*</span></label>
                                 <input
                                     required
                                     type="date"
@@ -405,7 +434,7 @@ const BookingManager = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1.5">Expected Check-out</label>
+                                <label className="block text-xs font-medium text-gray-600 mb-1.5">Expected Check-out <span className="text-red-500">*</span></label>
                                 <input
                                     required
                                     type="date"

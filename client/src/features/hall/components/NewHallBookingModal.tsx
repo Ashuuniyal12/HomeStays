@@ -88,7 +88,41 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
+    const validateStep = (currentStep: number) => {
+        if (currentStep === 1) {
+            if (!formData.guestName.trim()) return "Guest Name is required";
+            if (!formData.guestPhone.trim()) return "Phone Number is required";
+            if (formData.guestPhone.replace(/\D/g, '').length < 10) return "Phone number must be at least 10 digits";
+            if (formData.guestEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.guestEmail)) return "Invalid email format";
+        }
+        if (currentStep === 2) {
+            if (!formData.eventDate) return "Event Date is required";
+            if (!formData.guestCount) return "Guest Count is required";
+            if (parseInt(formData.guestCount) <= 0) return "Guest count must be greater than 0";
+        }
+        if (currentStep === 4) {
+            if (formData.totalAmount < 0) return "Total amount cannot be negative";
+            if (formData.advanceAmount < 0) return "Advance amount cannot be negative";
+        }
+        return null;
+    };
+
+    const handleNext = () => {
+        const error = validateStep(step);
+        if (error) {
+            alert(error); // Using alert as per existing style, or could change to toast if imported
+            return;
+        }
+        setStep(s => Math.min(4, s + 1));
+    };
+
     const handleSubmit = async () => {
+        const error = validateStep(4);
+        if (error) {
+            alert(error);
+            return;
+        }
+
         setLoading(true);
         try {
             await axios.post('/api/hall/bookings', formData, {
@@ -134,7 +168,7 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
                     {step === 1 && (
                         <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Guest Name</label>
+                                <label className="block text-sm font-medium text-gray-700">Guest Name <span className="text-red-500">*</span></label>
                                 <input
                                     type="text"
                                     className="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
@@ -145,7 +179,7 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+                                    <label className="block text-sm font-medium text-gray-700">Phone Number <span className="text-red-500">*</span></label>
                                     <input
                                         type="tel"
                                         className="mt-1 w-full border rounded-lg px-3 py-2"
@@ -179,7 +213,7 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
                     {step === 2 && (
                         <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Event Date</label>
+                                <label className="block text-sm font-medium text-gray-700">Event Date <span className="text-red-500">*</span></label>
                                 <input
                                     type="date"
                                     className="mt-1 w-full border rounded-lg px-3 py-2"
@@ -217,7 +251,7 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Number of Guests</label>
+                                <label className="block text-sm font-medium text-gray-700">Number of Guests <span className="text-red-500">*</span></label>
                                 <input
                                     type="number"
                                     className="mt-1 w-full border rounded-lg px-3 py-2"
@@ -322,7 +356,7 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Total Amount (Quote)</label>
+                                    <label className="block text-sm font-medium text-gray-700">Total Amount (Quote) <span className="text-red-500">*</span></label>
                                     <div className="relative mt-1">
                                         <span className="absolute left-3 top-2 text-gray-500">₹</span>
                                         <input
@@ -362,11 +396,7 @@ const NewHallBookingModal = ({ isOpen, onClose, onSuccess }: NewHallBookingModal
 
                     {step < 4 ? (
                         <button
-                            onClick={() => setStep(s => Math.min(4, s + 1))}
-                            disabled={
-                                (step === 1 && !formData.guestName) ||
-                                (step === 2 && !formData.eventDate)
-                            }
+                            onClick={handleNext}
                             className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Next <ChevronRight size={18} />
