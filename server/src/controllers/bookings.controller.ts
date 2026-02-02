@@ -48,7 +48,29 @@ export const createBooking = async (req: Request, res: Response) => {
     const { roomId, guestName, checkInDate, expectedCheckOutDate, phoneNumber, idType, idNumber, advancePayment, email, discount } = req.body;
 
     try {
-        // 1. Create Guest User
+        // 1. Validate Room Availability (Time-Based Overlap Check)
+        // Overlap Condition: (NewStart < ExistingEnd) && (NewEnd > ExistingStart)
+        const newCheckIn = new Date(checkInDate);
+        const newCheckOut = new Date(expectedCheckOutDate);
+
+        const conflictingBooking = await prisma.booking.findFirst({
+            where: {
+                roomId: parseInt(roomId),
+                status: 'ACTIVE',
+                AND: [
+                    { checkIn: { lt: newCheckOut } }, // Existing start is before new end
+                    { checkOut: { gt: newCheckIn } }  // Existing end is after new start
+                ]
+            }
+        });
+
+        if (conflictingBooking) {
+            return res.status(400).json({
+                error: `Room ${roomId} is already booked from ${new Date(conflictingBooking.checkIn).toLocaleString()} to ${new Date(conflictingBooking.checkOut).toLocaleString()}`
+            });
+        }
+
+        // 2. Create Guest User
         const username = generateUsername(guestName);
         const tempPassword = generateTempPassword();
         const hashedPassword = await bcrypt.hash(tempPassword, 10);
@@ -99,13 +121,13 @@ export const createBooking = async (req: Request, res: Response) => {
             });
         }
 
-        // 2. Create Booking
+        // 3. Create Booking
         const booking = await prisma.booking.create({
             data: {
                 guestId: guest.id,
                 roomId: parseInt(roomId),
-                checkIn: new Date(checkInDate),
-                checkOut: new Date(expectedCheckOutDate),
+                checkIn: newCheckIn,
+                checkOut: newCheckOut,
                 status: 'ACTIVE',
                 plainPassword: tempPassword,
                 paidAmount: advancePayment ? parseFloat(advancePayment) : 0,
@@ -113,11 +135,19 @@ export const createBooking = async (req: Request, res: Response) => {
             }
         });
 
-        // 3. Update Room Status
-        await prisma.room.update({
-            where: { id: parseInt(roomId) },
-            data: { status: 'OCCUPIED' }
-        });
+        // 4. Update Room Status (Only if check-in is today)
+        const today = new Date();
+        const checkInTime = newCheckIn.getTime();
+        const checkOutTime = newCheckOut.getTime();
+        const nowTime = today.getTime();
+
+        // If booking covers the current moment, mark as OCCUPIED
+        if (checkInTime <= nowTime && checkOutTime > nowTime) {
+            await prisma.room.update({
+                where: { id: parseInt(roomId) },
+                data: { status: 'OCCUPIED' }
+            });
+        }
 
         // Notify Admin
         io.emit('booking:new', { booking, guest });
@@ -130,6 +160,99 @@ export const createBooking = async (req: Request, res: Response) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Check-in failed' });
+    }
+};
+
+export const updateBooking = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { roomId, guestName, checkInDate, expectedCheckOutDate, phoneNumber, idType, idNumber, advancePayment, email, discount } = req.body;
+
+    try {
+        const existingBooking = await prisma.booking.findUnique({
+            where: { id },
+            include: { guest: true, room: true }
+        });
+
+        if (!existingBooking) return res.status(404).json({ error: 'Booking not found' });
+
+        // 1. Validate Room Availability (Time-Based Overlap Check)
+        // Exclude the current booking from the check
+        const newCheckIn = new Date(checkInDate);
+        const newCheckOut = new Date(expectedCheckOutDate);
+        const targetRoomId = parseInt(roomId);
+
+        const conflictingBooking = await prisma.booking.findFirst({
+            where: {
+                id: { not: id }, // Exclude self
+                roomId: targetRoomId,
+                status: 'ACTIVE',
+                AND: [
+                    { checkIn: { lt: newCheckOut } }, // Existing start is before new end
+                    { checkOut: { gt: newCheckIn } }  // Existing end is after new start
+                ]
+            }
+        });
+
+        if (conflictingBooking) {
+            return res.status(400).json({
+                error: `Room ${targetRoomId} is already booked from ${new Date(conflictingBooking.checkIn).toLocaleString()} to ${new Date(conflictingBooking.checkOut).toLocaleString()}`
+            });
+        }
+
+        // 2. Update Guest Details
+        await prisma.user.update({
+            where: { id: existingBooking.guestId },
+            data: {
+                name: guestName,
+                phoneNumber,
+                email,
+                idType,
+                idNumber
+            }
+        });
+
+        // 3. Handle Room Change
+        const oldRoomId = existingBooking.roomId;
+        let finalRoomId = oldRoomId;
+
+        if (targetRoomId && targetRoomId !== oldRoomId) {
+            // 3a. Free the old room
+            await prisma.room.update({
+                where: { id: oldRoomId },
+                data: { status: 'CLEANING' } // Mark old room as dirty/cleaning
+            });
+
+            // 3b. Occupy the new room (if applicable right now)
+            const today = new Date();
+            const nowTime = today.getTime();
+            if (newCheckIn.getTime() <= nowTime && newCheckOut.getTime() > nowTime) {
+                await prisma.room.update({
+                    where: { id: targetRoomId },
+                    data: { status: 'OCCUPIED' }
+                });
+            }
+
+            finalRoomId = targetRoomId;
+        }
+
+        // 4. Update Booking Details
+        const updatedBooking = await prisma.booking.update({
+            where: { id },
+            data: {
+                roomId: finalRoomId,
+                checkIn: newCheckIn,
+                checkOut: newCheckOut,
+                paidAmount: advancePayment ? parseFloat(advancePayment) : 0,
+                discount: discount ? parseFloat(discount) : 0,
+            },
+            include: { guest: true, room: true }
+        });
+
+        res.json(updatedBooking);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Update failed' });
     }
 };
 
@@ -315,7 +438,29 @@ export const searchGuest = async (req: Request, res: Response) => {
             }
         });
 
-        if (bookings.length === 0) return res.json(null);
+        if (bookings.length === 0) {
+            // Fallback: Search in User table directly
+            const guest = await prisma.user.findFirst({
+                where: {
+                    OR: [
+                        { email: { equals: String(query), mode: 'insensitive' } },
+                        { phoneNumber: { contains: String(query) } }
+                    ]
+                }
+            });
+
+            if (!guest) return res.json(null);
+
+            // Found guest but no bookings
+            return res.json({
+                ...guest,
+                bookings: [],
+                stats: {
+                    totalVisits: 0,
+                    tier: 'New'
+                }
+            });
+        }
 
         // Use the most recent guest details for the form
         const latestGuest = bookings[0].guest;

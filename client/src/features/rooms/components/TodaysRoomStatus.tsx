@@ -34,12 +34,22 @@ const TodaysRoomStatus: React.FC<TodaysRoomStatusProps> = ({ rooms, onRefresh })
     const [editingRoomId, setEditingRoomId] = useState<number | null>(null);
     const [isUpdating, setIsUpdating] = useState(false);
 
-    const getTodaysBooking = (room: Room) => {
+    // Helper to find a booking that implies the room is physically occupied right now.
+    // This includes:
+    // 1. Current stays (Check-in <= Today < Check-out)
+    // 2. Overstays (Check-in < Check-out <= Today, but strictly still ACTIVE status)
+    const getEffectiveOccupant = (room: Room) => {
         if (!room.bookings) return null;
         return room.bookings.find(booking => {
+            // Must be ACTIVE to count as physically occupying the room
+            if (booking.status !== 'ACTIVE') return false;
+
             const start = new Date(booking.checkIn);
-            const end = new Date(booking.checkOut);
-            return today >= new Date(start.setHours(0, 0, 0, 0)) && today < new Date(end.setHours(0, 0, 0, 0));
+            start.setHours(0, 0, 0, 0);
+
+            // If the booking started today or in the past, and hasn't been completed/checked-out (still ACTIVE),
+            // then the guest is effectively in the room.
+            return start.getTime() <= today.getTime();
         });
     };
 
@@ -82,8 +92,32 @@ const TodaysRoomStatus: React.FC<TodaysRoomStatusProps> = ({ rooms, onRefresh })
                     <div className="text-center p-8 text-gray-400">No rooms found.</div>
                 ) : (
                     rooms.map(room => {
-                        const activeBooking = getTodaysBooking(room);
-                        const isOccupied = room.status === 'OCCUPIED' || !!activeBooking;
+                        const activeBooking = getEffectiveOccupant(room);
+
+                        let displayStatus = room.status;
+
+                        if (activeBooking) {
+                            // If there is an active occupant, force status to OCCUPIED on UI
+                            displayStatus = 'OCCUPIED';
+                        } else if (room.status === 'OCCUPIED') {
+                            // Edge Case: DB says OCCUPIED, but we found no active occupant for today/past.
+                            // This likely means the room is marked OCCUPIED for a FUTURE booking (prematurely).
+
+                            // Check if there is a purely future active booking
+                            const hasFutureBooking = room.bookings?.some(b => {
+                                if (b.status !== 'ACTIVE') return false;
+                                const start = new Date(b.checkIn);
+                                start.setHours(0, 0, 0, 0);
+                                return start.getTime() > today.getTime();
+                            });
+
+                            if (hasFutureBooking) {
+                                // Correct the display to AVAILABLE since the guest hasn't arrived yet
+                                displayStatus = 'AVAILABLE';
+                            }
+                        }
+
+                        const isOccupied = displayStatus === 'OCCUPIED';
                         const isEditing = editingRoomId === room.id;
 
                         // Inline Edit Mode
@@ -118,8 +152,8 @@ const TodaysRoomStatus: React.FC<TodaysRoomStatusProps> = ({ rooms, onRefresh })
                                                     `}
                                                 >
                                                     <opt.icon size={16} className={`mb-1 ${opt.color === 'green' ? 'text-green-600' :
-                                                            opt.color === 'yellow' ? 'text-yellow-600' :
-                                                                opt.color === 'red' ? 'text-red-600' : 'text-gray-600'
+                                                        opt.color === 'yellow' ? 'text-yellow-600' :
+                                                            opt.color === 'red' ? 'text-red-600' : 'text-gray-600'
                                                         }`} />
                                                     <span className={`text-[10px] font-bold uppercase ${room.status === opt.value ? 'text-blue-700' : 'text-gray-600'
                                                         }`}>{opt.label}</span>
@@ -136,13 +170,13 @@ const TodaysRoomStatus: React.FC<TodaysRoomStatusProps> = ({ rooms, onRefresh })
                             <div
                                 key={room.id}
                                 className={`group relative p-3 rounded-lg transition-all border-2 mb-2
-                                    ${room.status === 'CLEANING' ? 'bg-yellow-50 border-yellow-400' :
-                                        room.status === 'OCCUPIED' ? 'bg-red-50 border-red-300' :
-                                            room.status === 'MAINTENANCE' ? 'bg-gray-100 border-gray-400' :
+                                    ${displayStatus === 'CLEANING' ? 'bg-yellow-50 border-yellow-400' :
+                                        displayStatus === 'OCCUPIED' ? 'bg-red-50 border-red-300' :
+                                            displayStatus === 'MAINTENANCE' ? 'bg-gray-100 border-gray-400' :
                                                 'bg-white border-gray-100 hover:border-gray-200'}`}
                             >
                                 {/* Pattern Overlay for Special States */}
-                                {(room.status === 'CLEANING' || room.status === 'OCCUPIED' || room.status === 'MAINTENANCE') && (
+                                {(displayStatus === 'CLEANING' || displayStatus === 'OCCUPIED' || displayStatus === 'MAINTENANCE') && (
                                     <div className="absolute inset-0 pointer-events-none opacity-10"
                                         style={{
                                             backgroundImage: `repeating-linear-gradient(45deg, #000 0, #000 1px, transparent 0, transparent 50%)`,
@@ -159,14 +193,14 @@ const TodaysRoomStatus: React.FC<TodaysRoomStatusProps> = ({ rooms, onRefresh })
                                         </div>
                                         <button
                                             onClick={() => setEditingRoomId(room.id)}
-                                            className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border shadow-sm transition-transform hover:scale-105 active:scale-95 cursor-pointer ${room.status === 'AVAILABLE' ? 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200' :
-                                                room.status === 'OCCUPIED' ? 'bg-white/80 text-red-700 border-red-200 hover:bg-red-100' :
-                                                    room.status === 'CLEANING' ? 'bg-white/80 text-yellow-700 border-yellow-200 hover:bg-yellow-100' :
+                                            className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border shadow-sm transition-transform hover:scale-105 active:scale-95 cursor-pointer ${displayStatus === 'AVAILABLE' ? 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200' :
+                                                displayStatus === 'OCCUPIED' ? 'bg-white/80 text-red-700 border-red-200 hover:bg-red-100' :
+                                                    displayStatus === 'CLEANING' ? 'bg-white/80 text-yellow-700 border-yellow-200 hover:bg-yellow-100' :
                                                         'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300'
                                                 }`}
                                             title="Click to change status"
                                         >
-                                            {room.status}
+                                            {displayStatus}
                                         </button>
                                     </div>
 
@@ -187,10 +221,13 @@ const TodaysRoomStatus: React.FC<TodaysRoomStatusProps> = ({ rooms, onRefresh })
                                             </div>
                                         </div>
                                     ) : (
-                                        room.status !== 'AVAILABLE' && (
-                                            <p className="text-xs text-gray-500 mt-1 italic font-medium">
-                                                {room.status === 'CLEANING' ? 'Housekeeping in progress' : 'Currently not available'}
-                                            </p>
+                                        room.status !== 'AVAILABLE' && ( // Keep original status check for cleaning/maintenance message? 
+                                            // Actually, if we are displaying AVAILABLE because it was falsely OCCUPIED, we shouldn't show "Currently not available"
+                                            displayStatus !== 'AVAILABLE' && (
+                                                <p className="text-xs text-gray-500 mt-1 italic font-medium">
+                                                    {displayStatus === 'CLEANING' ? 'Housekeeping in progress' : 'Currently not available'}
+                                                </p>
+                                            )
                                         )
                                     )}
                                 </div>

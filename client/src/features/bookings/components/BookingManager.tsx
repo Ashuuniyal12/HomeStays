@@ -3,7 +3,7 @@ import axios from 'axios';
 import BillView from '../../billing/components/BillView';
 import { toast } from 'react-hot-toast';
 import Loader from '../../../utils/Loader';
-import { User, Calendar, LogIn, LogOut, CreditCard, X, Plus, UserCheck, Utensils } from 'lucide-react';
+import { User, Calendar, LogIn, LogOut, CreditCard, X, Plus, UserCheck, Utensils, Edit2 } from 'lucide-react';
 import AdminOrderModal from './AdminOrderModal';
 
 const BookingManager = () => {
@@ -15,19 +15,23 @@ const BookingManager = () => {
     const [selectedBookingForOrder, setSelectedBookingForOrder] = useState<any>(null); // New State
     const [viewMode, setViewMode] = useState<'ACTIVE' | 'HISTORY'>('ACTIVE');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
 
     // Form State
     const [formData, setFormData] = useState({
         roomId: '',
         guestName: '',
         phoneNumber: '',
-        email: '', // New Field
-        idType: 'Aadhar',
+        email: '',
+        idType: 'Aadhaar',
         idNumber: '',
         checkInDate: new Date().toISOString().split('T')[0],
+        checkInTime: '12:00',
         expectedCheckOutDate: '',
+        checkOutTime: '11:00',
         advancePayment: '',
-        discount: '' // New Field
+        discount: ''
     });
 
     // Guest Lookup State
@@ -86,6 +90,39 @@ const BookingManager = () => {
         return null;
     };
 
+    const handleEditBooking = (booking: any) => {
+        const checkIn = new Date(booking.checkIn);
+        const checkOut = new Date(booking.checkOut);
+
+        // Helper to get HH:MM format
+        const getTimeString = (date: Date) => {
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+        };
+
+        setFormData({
+            guestName: booking.guest?.name || booking.guestName || '',
+            phoneNumber: booking.guest?.phoneNumber || '',
+            email: booking.guest?.email || '',
+            idType: booking.guest?.idType || 'Aadhaar',
+            idNumber: booking.guest?.idNumber || '',
+            roomId: booking.roomId?.toString() || '',
+            checkInDate: checkIn.toISOString().split('T')[0],
+            checkInTime: getTimeString(checkIn),
+            expectedCheckOutDate: checkOut.toISOString().split('T')[0],
+            checkOutTime: getTimeString(checkOut),
+            advancePayment: booking.paidAmount?.toString() || '',
+            discount: booking.discount?.toString() || ''
+        });
+        setEditingBookingId(booking.id);
+        setIsEditing(true);
+        setShowForm(true);
+
+        // Scroll to form
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     const handleCheckIn = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -95,30 +132,53 @@ const BookingManager = () => {
             return;
         }
 
+        // Combine Date and Time
+        const checkInDateTime = new Date(`${formData.checkInDate}T${formData.checkInTime}`);
+        const checkOutDateTime = new Date(`${formData.expectedCheckOutDate}T${formData.checkOutTime}`);
+
+        // Payload
+        const payload = {
+            ...formData,
+            checkInDate: checkInDateTime.toISOString(),
+            expectedCheckOutDate: checkOutDateTime.toISOString()
+        };
+
         setIsProcessing(true);
         try {
-            const res = await axios.post('/api/bookings', formData);
-            setNewGuestCreds(res.data.credentials);
+            if (isEditing && editingBookingId) {
+                // Update Booking
+                await axios.put(`/api/bookings/${editingBookingId}`, payload);
+                toast.success('Booking updated successfully');
+            } else {
+                // Create New Booking
+                const res = await axios.post('/api/bookings', payload);
+                setNewGuestCreds(res.data.credentials);
+                toast.success('Check-in completed successfully!');
+            }
+
             setShowForm(false);
+            setIsEditing(false);
+            setEditingBookingId(null);
             fetchData();
-            toast.success('Check-in completed successfully!');
             // Reset form
             setFormData({
                 roomId: '',
                 guestName: '',
                 phoneNumber: '',
                 email: '',
-                idType: 'Aadhar',
+                idType: 'Aadhaar',
                 idNumber: '',
                 checkInDate: new Date().toISOString().split('T')[0],
+                checkInTime: '12:00',
                 expectedCheckOutDate: '',
+                checkOutTime: '11:00',
                 advancePayment: '',
                 discount: ''
             });
             setFoundGuest(null);
         } catch (err: any) {
             console.error(err);
-            toast.error('Check-in failed: ' + (err.response?.data?.error || err.message));
+            toast.error(err.response?.data?.error || 'Operation failed');
         } finally {
             setIsProcessing(false);
         }
@@ -253,11 +313,23 @@ const BookingManager = () => {
 
                 {viewMode === 'ACTIVE' && (
                     <button
-                        onClick={() => setShowForm(!showForm)}
+                        onClick={() => {
+                            setShowForm(!showForm);
+                            setIsEditing(false);
+                            setEditingBookingId(null);
+                            setFormData({
+                                guestName: '', phoneNumber: '', email: '', idType: 'Aadhaar', idNumber: '',
+                                roomId: '', checkInDate: new Date().toISOString().split('T')[0],
+                                checkInTime: '12:00',
+                                expectedCheckOutDate: '',
+                                checkOutTime: '11:00',
+                                advancePayment: '', discount: ''
+                            });
+                        }}
                         className="w-full sm:w-auto flex items-center justify-center gap-1.5 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                     >
                         {showForm ? <X size={16} /> : <Plus size={16} />}
-                        {showForm ? 'Cancel' : 'New Check-in'}
+                        {showForm ? 'Cancel' : (isEditing ? 'Edit Booking' : 'New Check-in')}
                     </button>
                 )}
             </div>
@@ -272,6 +344,10 @@ const BookingManager = () => {
                         </h3>
                     </div>
                     <form onSubmit={handleCheckIn} className="p-4 sm:p-5">
+                        <h3 className="text-lg font-bold mb-4 text-gray-800 flex items-center gap-2">
+                            {isEditing ? <Edit2 size={20} className="text-blue-600" /> : <UserCheck size={20} className="text-green-600" />}
+                            {isEditing ? 'Edit Booking Details' : 'Guest Check-in Form'}
+                        </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-xs font-medium text-gray-600 mb-1.5">Select Room <span className="text-red-500">*</span></label>
@@ -281,9 +357,11 @@ const BookingManager = () => {
                                     value={formData.roomId}
                                     onChange={e => setFormData({ ...formData, roomId: e.target.value })}
                                 >
-                                    <option value="">-- Select Available Room --</option>
-                                    {rooms.filter(r => r.status === 'AVAILABLE').map(r => (
-                                        <option key={r.id} value={r.id}>Room {r.number} ({r.type})</option>
+                                    <option value="">-- Select Room --</option>
+                                    {rooms.map(r => (
+                                        <option key={r.id} value={r.id}>
+                                            Room {r.number} ({r.type})
+                                        </option>
                                     ))}
                                 </select>
                             </div>
@@ -418,25 +496,49 @@ const BookingManager = () => {
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1.5">Check-in Date <span className="text-red-500">*</span></label>
-                                <input
-                                    required
-                                    type="date"
-                                    className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
-                                    value={formData.checkInDate}
-                                    onChange={e => setFormData({ ...formData, checkInDate: e.target.value })}
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1.5">Check-in Date <span className="text-red-500">*</span></label>
+                                    <input
+                                        required
+                                        type="date"
+                                        className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+                                        value={formData.checkInDate}
+                                        onChange={e => setFormData({ ...formData, checkInDate: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1.5">Check-in Time</label>
+                                    <input
+                                        required
+                                        type="time"
+                                        className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+                                        value={(formData as any).checkInTime}
+                                        onChange={e => setFormData({ ...formData, checkInTime: e.target.value } as any)}
+                                    />
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1.5">Expected Check-out <span className="text-red-500">*</span></label>
-                                <input
-                                    required
-                                    type="date"
-                                    className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
-                                    value={formData.expectedCheckOutDate}
-                                    onChange={e => setFormData({ ...formData, expectedCheckOutDate: e.target.value })}
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1.5">Expected Check-out <span className="text-red-500">*</span></label>
+                                    <input
+                                        required
+                                        type="date"
+                                        className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+                                        value={formData.expectedCheckOutDate}
+                                        onChange={e => setFormData({ ...formData, expectedCheckOutDate: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1.5">Check-out Time</label>
+                                    <input
+                                        required
+                                        type="time"
+                                        className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+                                        value={(formData as any).checkOutTime}
+                                        onChange={e => setFormData({ ...formData, checkOutTime: e.target.value } as any)}
+                                    />
+                                </div>
                             </div>
 
                             {/* Payment Section */}
@@ -476,11 +578,8 @@ const BookingManager = () => {
                             </div>
                         </div>
                         <div className="mt-5">
-                            <button
-                                type="submit"
-                                className="w-full bg-blue-600 text-white py-2.5 rounded-md font-medium text-sm hover:bg-blue-700 transition-colors"
-                            >
-                                Confirm Check-in
+                            <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-all transform active:scale-95 shadow-lg shadow-blue-200">
+                                {isEditing ? 'Update Booking' : 'Confirm Check-in'}
                             </button>
                         </div>
                     </form>
@@ -568,11 +667,18 @@ const BookingManager = () => {
                                             </button>
                                         )}
                                         <button
-                                            onClick={() => setSelectedBookingId(booking.id)}
-                                            className="flex-1 md:flex-none flex items-center justify-center gap-1.5 text-blue-600 border border-blue-600 px-3 py-1.5 rounded-md text-sm font-medium hover:bg-blue-50 transition-colors"
+                                            onClick={() => handleEditBooking(booking)}
+                                            className="w-full bg-blue-100 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors flex items-center justify-center gap-1.5"
                                         >
-                                            <CreditCard size={16} />
-                                            Bill
+                                            <Edit2 size={16} />
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={() => handleCheckOut(booking.id)}
+                                            className="w-full bg-red-100 text-red-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors flex items-center justify-center gap-1.5"
+                                        >
+                                            <LogOut size={16} />
+                                            Check-out
                                         </button>
                                     </div>
                                 </div>
