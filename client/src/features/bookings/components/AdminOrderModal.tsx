@@ -100,9 +100,9 @@ const AdminOrderModal = ({ bookingId, roomNumber, guestName, onClose }: AdminOrd
                     </button>
                 </div>
 
-                <div className="flex flex-1 overflow-hidden">
+                <div className="flex flex-col md:flex-row flex-1 overflow-hidden relative">
                     {/* Left: Menu List */}
-                    <div className="flex-1 flex flex-col border-r border-gray-100">
+                    <div className="flex-1 flex flex-col border-r-0 md:border-r border-gray-100 overflow-hidden">
                         {/* Search Bar */}
                         <div className="p-4 border-b">
                             <div className="relative">
@@ -118,7 +118,7 @@ const AdminOrderModal = ({ bookingId, roomNumber, guestName, onClose }: AdminOrd
                         </div>
 
                         {/* Menu Grid */}
-                        <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+                        <div className="flex-1 overflow-y-auto p-4 bg-gray-50 pb-32 md:pb-4">
                             {loading ? (
                                 <div className="flex justify-center py-10"><Loader size={32} className="text-blue-500" /></div>
                             ) : (
@@ -138,22 +138,22 @@ const AdminOrderModal = ({ bookingId, roomNumber, guestName, onClose }: AdminOrd
                                                     <div className="flex items-center gap-2 bg-blue-50 rounded-lg p-1 w-full justify-between">
                                                         <button
                                                             onClick={() => updateQuantity(item.id, -1)}
-                                                            className="w-6 h-6 flex items-center justify-center bg-white shadow-sm rounded text-blue-600 hover:bg-blue-100 transition"
+                                                            className="w-8 h-8 md:w-6 md:h-6 flex items-center justify-center bg-white shadow-sm rounded text-blue-600 hover:bg-blue-100 transition"
                                                         >
-                                                            <Minus size={12} />
+                                                            <Minus size={14} />
                                                         </button>
                                                         <span className="font-bold text-blue-700 text-sm">{cart[item.id]}</span>
                                                         <button
                                                             onClick={() => updateQuantity(item.id, 1)}
-                                                            className="w-6 h-6 flex items-center justify-center bg-white shadow-sm rounded text-blue-600 hover:bg-blue-100 transition"
+                                                            className="w-8 h-8 md:w-6 md:h-6 flex items-center justify-center bg-white shadow-sm rounded text-blue-600 hover:bg-blue-100 transition"
                                                         >
-                                                            <Plus size={12} />
+                                                            <Plus size={14} />
                                                         </button>
                                                     </div>
                                                 ) : (
                                                     <button
                                                         onClick={() => updateQuantity(String(item.id), 1)}
-                                                        className="w-full py-1.5 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 rounded-md text-xs font-bold transition-colors flex items-center justify-center gap-1"
+                                                        className="w-full py-2 md:py-1.5 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 rounded-md text-xs font-bold transition-colors flex items-center justify-center gap-1"
                                                     >
                                                         Add Item
                                                     </button>
@@ -166,16 +166,28 @@ const AdminOrderModal = ({ bookingId, roomNumber, guestName, onClose }: AdminOrd
                         </div>
                     </div>
 
-                    {/* Right: Cart Summary */}
-                    <div className="w-80 bg-white flex flex-col shadow-xl z-10">
-                        <div className="p-4 bg-blue-50 border-b border-blue-100">
+                    {/* Right: Cart Summary (Responsive) */}
+                    <div className={`
+                        w-full md:w-80 bg-white flex flex-col shadow-[0_-4px_10px_rgba(0,0,0,0.1)] md:shadow-xl z-20 
+                        absolute bottom-0 md:relative md:h-auto transition-all duration-300
+                        ${cartCount > 0 ? 'translate-y-0' : 'translate-y-full md:translate-y-0'}
+                    `}>
+                        {/* Mobile Header (Toggle) */}
+                        <div className="md:hidden flex items-center justify-center p-1">
+                            <div className="w-12 h-1 bg-gray-300 rounded-full my-1"></div>
+                        </div>
+
+                        <div className="p-4 bg-blue-50 border-b border-blue-100 hidden md:block">
                             <h4 className="font-bold text-gray-800 flex items-center gap-2">
                                 <ShoppingBag size={18} className="text-blue-600" />
                                 Current Order
                             </h4>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                        {/* Cart Items List - Hidden on mobile unless we want to expand (simplified for now: fixed height on mobile if needed, or just let it be) 
+                           For UX, on mobile we mostly need the checkout button. We'll show a small list only on desktop or make it scrollable max-h-40 on mobile inside the panel.
+                        */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-3 hidden md:block">
                             {Object.keys(cart).length === 0 ? (
                                 <div className="text-center py-10 text-gray-400">
                                     <ShoppingBag size={48} className="mx-auto mb-2 opacity-20" />
@@ -198,18 +210,19 @@ const AdminOrderModal = ({ bookingId, roomNumber, guestName, onClose }: AdminOrd
                             )}
                         </div>
 
-                        <div className="p-4 border-t bg-gray-50 space-y-4">
+                        {/* Footer Section */}
+                        <div className="p-4 border-t bg-white md:bg-gray-50 space-y-3 md:space-y-4">
                             <div className="flex justify-between items-center text-lg font-bold text-gray-900">
-                                <span>Total</span>
+                                <span className="text-sm md:text-lg text-gray-600 md:text-gray-900">Total ({cartCount} items)</span>
                                 <span>₹{cartTotal}</span>
                             </div>
                             <button
                                 onClick={handleSubmit}
                                 disabled={submitting || cartCount === 0}
-                                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg hover:shadow-blue-500/30"
+                                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg hover:shadow-blue-500/30 active:scale-95"
                             >
                                 {submitting ? <Loader size={18} className="text-white" /> : <Send size={18} />}
-                                {submitting ? 'Placing Order...' : `Confirm Order (${cartCount})`}
+                                {submitting ? 'Placing...' : `Confirm Order`}
                             </button>
                         </div>
                     </div>

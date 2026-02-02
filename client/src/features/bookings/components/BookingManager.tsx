@@ -587,100 +587,161 @@ const BookingManager = () => {
             )}
 
             {/* Bookings List */}
+            {/* Bookings List */}
             <div className="grid gap-4">
                 {(viewMode === 'ACTIVE' ? bookings : historyBookings).length === 0 ? (
-                    <div className="bg-white rounded-2xl shadow-md p-12 text-center">
-                        <div className="text-gray-400 mb-4">
-                            <Calendar size={64} className="mx-auto" />
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+                        <div className="inline-flex bg-gray-50 p-4 rounded-full text-gray-400 mb-4">
+                            <Calendar size={48} />
                         </div>
-                        <p className="text-gray-500 text-lg font-semibold">
-                            {viewMode === 'ACTIVE' ? 'No active bookings' : 'No past bookings found'}
+                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                            {viewMode === 'ACTIVE' ? 'No Active Bookings' : 'No Booking History'}
+                        </h3>
+                        <p className="text-gray-500 text-sm">
+                            {viewMode === 'ACTIVE'
+                                ? 'New guests will appear here once checked in.'
+                                : 'Past bookings will be archived here.'}
                         </p>
                     </div>
                 ) : (
                     (viewMode === 'ACTIVE' ? bookings : historyBookings).map(booking => (
                         <div
                             key={booking.id}
-                            className="bg-white rounded-lg shadow-sm hover:shadow-md border border-gray-200 transition-shadow duration-200 overflow-hidden"
+                            className={`group relative bg-white rounded-xl border transition-all duration-200 overflow-hidden ${viewMode === 'ACTIVE'
+                                ? 'border-gray-200 shadow-sm hover:shadow-md hover:border-blue-200'
+                                : 'border-gray-100 opacity-90 hover:opacity-100'
+                                }`}
                         >
-                            <div className="p-4">
-                                <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-                                    <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-4 w-full">
-                                        {/* Room Info */}
-                                        <div>
-                                            <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Room</p>
-                                            <p className="text-2xl font-bold text-gray-900">
-                                                {booking.room?.number || booking.roomId}
-                                            </p>
-                                            <p className="text-sm text-gray-500">{booking.room?.type}</p>
-                                        </div>
+                            {/* Status Stripe */}
+                            <div className={`absolute left-0 top-0 bottom-0 w-1 ${viewMode === 'ACTIVE' ? 'bg-blue-500' : 'bg-gray-300'
+                                }`} />
 
-                                        {/* Guest Info */}
-                                        <div className="col-span-2 sm:col-span-1">
-                                            <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Guest</p>
-                                            <p className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
-                                                <User size={18} />
-                                                <span className="truncate max-w-[120px]">{booking.guest?.name}</span>
-                                            </p>
+                            <div className="p-4 sm:p-5 pl-5 sm:pl-6">
+                                <div className="flex flex-col lg:flex-row gap-6 lg:items-center">
+
+                                    {/* 1. Room Badge & Main Info */}
+                                    <div className="flex-shrink-0 flex items-start lg:items-center gap-4 min-w-[180px]">
+                                        <div className={`flex flex-col items-center justify-center w-14 h-14 rounded-xl border ${viewMode === 'ACTIVE'
+                                            ? 'bg-blue-50 border-blue-100 text-blue-700'
+                                            : 'bg-gray-50 border-gray-100 text-gray-500'
+                                            }`}>
+                                            <span className="text-[10px] uppercase font-bold tracking-wider">Room</span>
+                                            <span className="text-xl font-bold">{booking.room?.number || booking.roomId}</span>
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${viewMode === 'ACTIVE'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-gray-100 text-gray-600'
+                                                    }`}>
+                                                    {booking.room?.type}
+                                                </span>
+                                                {viewMode === 'ACTIVE' && booking.discount > 0 && (
+                                                    <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-sm font-bold">
+                                                        DISCOUNT
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-sm text-gray-500 font-medium">₹{booking.room?.price}/night</p>
+                                        </div>
+                                    </div>
+
+                                    {/* 2. Guest Details */}
+                                    <div className="flex-1 min-w-[200px]">
+                                        <div className="flex items-center gap-2 mb-1.5">
+                                            <User size={18} className="text-gray-400" />
+                                            <span className="font-bold text-gray-900 text-lg">{booking.guest?.name}</span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
+                                            <span className="flex items-center gap-1.5">
+                                                <span className="font-mono text-xs bg-gray-100 px-1.5 rounded text-gray-600">
+                                                    {booking.guest?.username || 'user'}
+                                                </span>
+                                            </span>
                                             {viewMode === 'ACTIVE' && (
-                                                <div className="mt-2 space-y-1">
-                                                    <div className="text-xs text-gray-500">
-                                                        User: <span className="font-mono text-gray-700 font-semibold">{booking.guest?.username}</span>
-                                                    </div>
-                                                    <div className="text-xs text-gray-500">
-                                                        Pass: <span className="font-mono text-gray-700 font-semibold">{booking.plainPassword || 'N/A'}</span>
-                                                    </div>
-                                                </div>
+                                                <span className="flex items-center gap-1.5">
+                                                    Pass: <span className="font-mono text-xs bg-gray-100 px-1.5 rounded text-gray-600">
+                                                        {booking.plainPassword || '****'}
+                                                    </span>
+                                                </span>
                                             )}
                                         </div>
+                                    </div>
 
-                                        {/* Check-in Date */}
-                                        <div>
-                                            <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Check-in</p>
-                                            <p className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
-                                                <LogIn size={18} className="text-green-600 shrink-0" />
-                                                {new Date(booking.checkIn).toLocaleDateString()}
-                                            </p>
+                                    {/* 3. Dates & Timing */}
+                                    <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-4 lg:gap-2 xl:gap-8 min-w-[240px]">
+                                        <div className="flex items-start gap-3">
+                                            <div className="mt-0.5 text-green-600 bg-green-50 p-1.5 rounded-md">
+                                                <LogIn size={16} />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Check-in</p>
+                                                <p className="font-semibold text-gray-900">
+                                                    {new Date(booking.checkIn).toLocaleDateString()}
+                                                </p>
+                                                <p className="text-xs text-gray-500 font-medium">
+                                                    {new Date(booking.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </p>
+                                            </div>
                                         </div>
 
-                                        {/* Check-out Date */}
-                                        <div>
-                                            <p className="text-xs text-gray-500 uppercase font-semibold mb-1">
-                                                {viewMode === 'ACTIVE' ? 'Expected Out' : 'Checked Out'}
-                                            </p>
-                                            <p className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
-                                                <LogOut size={18} className="text-orange-600 shrink-0" />
-                                                {new Date(booking.checkOut).toLocaleDateString()}
-                                            </p>
+                                        <div className="flex items-start gap-3">
+                                            <div className="mt-0.5 text-orange-600 bg-orange-50 p-1.5 rounded-md">
+                                                <LogOut size={16} />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">
+                                                    {viewMode === 'ACTIVE' ? 'Expected Out' : 'Checked Out'}
+                                                </p>
+                                                <p className="font-semibold text-gray-900">
+                                                    {new Date(booking.checkOut).toLocaleDateString()}
+                                                </p>
+                                                <p className="text-xs text-gray-500 font-medium">
+                                                    {new Date(booking.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* Action Buttons */}
-                                    <div className="flex items-center gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-dashed">
-                                        {viewMode === 'ACTIVE' && (
+                                    {/* 4. Actions */}
+                                    <div className="flex lg:flex-col xl:flex-row items-stretch gap-2 w-full lg:w-auto mt-4 lg:mt-0 pt-4 lg:pt-0 border-t lg:border-t-0 border-dashed">
+                                        {viewMode === 'ACTIVE' ? (
+                                            <>
+                                                <button
+                                                    onClick={() => setSelectedBookingForOrder(booking)}
+                                                    className="flex-1 lg:w-32 flex items-center justify-center gap-2 bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200 px-4 py-2 rounded-lg text-sm font-bold transition-all"
+                                                >
+                                                    <Utensils size={16} />
+                                                    Order
+                                                </button>
+
+                                                <button
+                                                    onClick={() => handleEditBooking(booking)}
+                                                    className="flex-1 lg:w-32 flex items-center justify-center gap-2 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 px-4 py-2 rounded-lg text-sm font-bold transition-all"
+                                                >
+                                                    <Edit2 size={16} />
+                                                    Edit
+                                                </button>
+
+                                                <button
+                                                    onClick={() => setSelectedBookingId(booking.id)}
+                                                    className="flex-1 lg:w-32 flex items-center justify-center gap-2 bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 px-4 py-2 rounded-lg text-sm font-bold transition-all"
+                                                >
+                                                    <CreditCard size={16} />
+                                                    View Bill
+                                                </button>
+                                            </>
+                                        ) : (
                                             <button
-                                                onClick={() => setSelectedBookingForOrder(booking)}
-                                                className="flex-1 md:flex-none flex items-center justify-center gap-1.5 text-orange-600 border border-orange-600 px-3 py-1.5 rounded-md text-sm font-medium hover:bg-orange-50 transition-colors"
+                                                onClick={() => setSelectedBookingId(booking.id)}
+                                                className="w-full lg:w-32 flex items-center justify-center gap-2 bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200 px-4 py-2 rounded-lg text-sm font-medium transition-all"
                                             >
-                                                <Utensils size={16} />
-                                                Order
+                                                <CreditCard size={16} />
+                                                View Bill
                                             </button>
                                         )}
-                                        <button
-                                            onClick={() => handleEditBooking(booking)}
-                                            className="w-full bg-blue-100 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors flex items-center justify-center gap-1.5"
-                                        >
-                                            <Edit2 size={16} />
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleCheckOut(booking.id)}
-                                            className="w-full bg-red-100 text-red-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors flex items-center justify-center gap-1.5"
-                                        >
-                                            <LogOut size={16} />
-                                            Check-out
-                                        </button>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
