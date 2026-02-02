@@ -30,11 +30,22 @@ const RoomGantt: React.FC<RoomGanttProps> = ({ rooms, startDate, daysToShow = 14
         return d;
     });
 
+    // Helper to parse date string strictly to local midnight (YYYY-MM-DD)
+    const toLocalMidnight = (isoString: string) => {
+        if (!isoString) return new Date();
+        const datePart = isoString.substring(0, 10); // "YYYY-MM-DD"
+        return new Date(datePart + 'T00:00:00'); // Forces local midnight
+    };
+
     const getBookingStyle = (booking: Booking) => {
-        const start = new Date(booking.checkIn);
-        const end = new Date(booking.checkOut);
-        const chartStart = startDate;
-        const chartEnd = new Date(startDate);
+        const start = toLocalMidnight(booking.checkIn);
+        const end = toLocalMidnight(booking.checkOut);
+
+        // Normalize chart start to midnight explicitly
+        const chartStart = new Date(startDate);
+        chartStart.setHours(0, 0, 0, 0);
+
+        const chartEnd = new Date(chartStart);
         chartEnd.setDate(chartEnd.getDate() + daysToShow);
 
         // Calculate overlap

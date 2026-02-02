@@ -528,6 +528,9 @@ const BookingManager = () => {
                                                     <div className="text-xs text-gray-500">
                                                         User: <span className="font-mono text-gray-700 font-semibold">{booking.guest?.username}</span>
                                                     </div>
+                                                    <div className="text-xs text-gray-500">
+                                                        Pass: <span className="font-mono text-gray-700 font-semibold">{booking.plainPassword || 'N/A'}</span>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
