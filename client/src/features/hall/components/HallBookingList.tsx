@@ -84,6 +84,23 @@ const HallBookingList = () => {
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-3">
+
+                                        <span className="text-[10px] text-gray-400 font-mono">#{booking.id.substring(0, 8)}</span>
+                                    </div>
+                                </div>
+
+                                {/* Body */}
+                                <div className="p-5 flex-1 space-y-4">
+                                    <div className='flex justify-between'>
+                                        <div className="flex items-start gap-3">
+                                            <div className="p-2 bg-blue-100 rounded-xl text-blue-600 shrink-0">
+                                                <User size={18} />
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-gray-900 group-hover:text-blue-700 transition-colors uppercase tracking-tight">{booking.guest?.name}</p>
+                                                <p className="text-xs text-gray-500 font-medium">{booking.guest?.phoneNumber}</p>
+                                            </div>
+                                        </div>
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -91,25 +108,11 @@ const HallBookingList = () => {
                                                 setCurrentNote(booking.notes || '');
                                                 setNoteModalOpen(true);
                                             }}
-                                            className="text-gray-400 hover:text-blue-600 transition p-1 hover:bg-blue-50 rounded"
+                                            className="text-orange-200 hover:text-blue-600 transition p-1 hover:bg-blue-50 rounded bg-yellow-50 rounded-l "
                                             title="View Notes"
                                         >
-                                            <FileText size={16} />
+                                            <FileText size={28} />
                                         </button>
-                                        <span className="text-[10px] text-gray-400 font-mono">#{booking.id.substring(0, 8)}</span>
-                                    </div>
-                                </div>
-
-                                {/* Body */}
-                                <div className="p-5 flex-1 space-y-4">
-                                    <div className="flex items-start gap-3">
-                                        <div className="p-2 bg-blue-100 rounded-xl text-blue-600 shrink-0">
-                                            <User size={18} />
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-gray-900 group-hover:text-blue-700 transition-colors uppercase tracking-tight">{booking.guest?.name}</p>
-                                            <p className="text-xs text-gray-500 font-medium">{booking.guest?.phoneNumber}</p>
-                                        </div>
                                     </div>
 
                                     <div className="grid grid-cols-3 gap-3 py-3 border-y border-dashed border-gray-100">
