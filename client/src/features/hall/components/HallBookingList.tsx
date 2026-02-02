@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Calendar, User, Clock, CreditCard, ChevronRight, CheckCircle, AlertCircle, Plus } from 'lucide-react';
+import { Calendar, User, Clock, CreditCard, ChevronRight, CheckCircle, AlertCircle, Plus, FileText } from 'lucide-react';
 import Loader from '../../../utils/Loader';
 import HallBillModal from './HallBillModal';
+import HallNotesModal from './HallNotesModal';
 
 const HallBookingList = () => {
     const [bookings, setBookings] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState<any>(null);
     const [isBillModalOpen, setIsBillModalOpen] = useState(false);
+
+    // Notes State
+    const [noteModalOpen, setNoteModalOpen] = useState(false);
+    const [currentNote, setCurrentNote] = useState<any>('');
+    const [noteBookingId, setNoteBookingId] = useState<string | null>(null);
 
     useEffect(() => {
         fetchBookings();
@@ -77,7 +83,21 @@ const HallBookingList = () => {
                                             {booking.status}
                                         </span>
                                     </div>
-                                    <span className="text-[10px] text-gray-400 font-mono">#{booking.id.substring(0, 8)}</span>
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setNoteBookingId(booking.id);
+                                                setCurrentNote(booking.notes || '');
+                                                setNoteModalOpen(true);
+                                            }}
+                                            className="text-gray-400 hover:text-blue-600 transition p-1 hover:bg-blue-50 rounded"
+                                            title="View Notes"
+                                        >
+                                            <FileText size={16} />
+                                        </button>
+                                        <span className="text-[10px] text-gray-400 font-mono">#{booking.id.substring(0, 8)}</span>
+                                    </div>
                                 </div>
 
                                 {/* Body */}
@@ -146,6 +166,14 @@ const HallBookingList = () => {
                     setIsBillModalOpen(false);
                     fetchBookings();
                 }}
+            />
+
+            <HallNotesModal
+                isOpen={noteModalOpen}
+                onClose={() => setNoteModalOpen(false)}
+                bookingId={noteBookingId}
+                initialNotes={currentNote}
+                onSuccess={fetchBookings}
             />
         </div>
     );

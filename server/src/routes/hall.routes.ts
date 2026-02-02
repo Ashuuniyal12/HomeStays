@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticateToken, authorizeRole } from '../middlewares/auth.middleware';
-import { createHallBooking, getHallBookings, checkHallAvailability, getHallGuests, updateHallBookingPayment } from '../controllers/hall.controller';
+import { createHallBooking, getHallBookings, checkHallAvailability, getHallGuests, updateHallBookingPayment, updateHallBookingNotes } from '../controllers/hall.controller';
 
 const router = express.Router();
 
@@ -11,6 +11,7 @@ router.get('/availability', authenticateToken, checkHallAvailability);
 router.get('/bookings', authenticateToken, getHallBookings);
 router.post('/bookings', authenticateToken, authorizeRole(['OWNER', 'STAFF']), createHallBooking);
 router.put('/bookings/:id/payment', authenticateToken, authorizeRole(['OWNER', 'STAFF']), updateHallBookingPayment);
+router.put('/bookings/:id/notes', authenticateToken, authorizeRole(['OWNER', 'STAFF']), updateHallBookingNotes);
 router.get('/guests', authenticateToken, getHallGuests);
 
 export default router;

@@ -112,6 +112,7 @@ model HallBooking {
   purpose       String            // Engagement, Birthday, Mundan, etc.
   status        String            // CONFIRMED, COMPLETED, CANCELLED
   guestCount    Int               @default(0)
+  notes         Json?   @map("hall_notes_v2")          // Rich Text Notes (JSON)
   
   totalAmount   Float             @default(0)
   advanceAmount Float             @default(0)

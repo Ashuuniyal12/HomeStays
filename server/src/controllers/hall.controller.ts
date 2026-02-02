@@ -7,7 +7,7 @@ export const createHallBooking = async (req: Request, res: Response) => {
 
     const {
         guestName, guestPhone, guestAddress, guestEmail,
-        eventDate, session, purpose,
+        eventDate, session, purpose, notes,
         customMenuItems, totalAmount, advanceAmount, guestCount // Added guestCount and replaced menuItemIds with customMenuItems
     } = req.body;
 
@@ -44,6 +44,7 @@ export const createHallBooking = async (req: Request, res: Response) => {
                     eventDate: new Date(eventDate),
                     session,
                     purpose,
+                    notes,
                     status: 'CONFIRMED',
                     totalAmount: parseFloat(totalAmount),
                     advanceAmount: parseFloat(advanceAmount),
@@ -92,7 +93,8 @@ export const getHallBookings = async (req: Request, res: Response) => {
         });
         res.json(bookings);
     } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch bookings' });
+        console.error("Get Hall Bookings Error:", err);
+        res.status(500).json({ error: 'Failed to fetch bookings', details: err });
     }
 };
 
@@ -165,5 +167,26 @@ export const updateHallBookingPayment = async (req: Request, res: Response) => {
     } catch (err) {
         console.error('Update Payment Error:', err);
         res.status(500).json({ error: 'Failed to update payment' });
+    }
+};
+
+// --- Update Notes ---
+export const updateHallBookingNotes = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { notes } = req.body;
+
+    try {
+        const booking = await prisma.hallBooking.findUnique({ where: { id } });
+        if (!booking) return res.status(404).json({ error: 'Booking not found' });
+
+        const updatedBooking = await prisma.hallBooking.update({
+            where: { id },
+            data: { notes }
+        });
+
+        res.json(updatedBooking);
+    } catch (err) {
+        console.error('Update Notes Error:', err);
+        res.status(500).json({ error: 'Failed to update notes' });
     }
 };

@@ -2,7 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../../features/auth/auth.store';
-import { ChevronLeft, ChevronRight, Calendar as CalIcon, X, User, Clock, CheckCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalIcon, X, User, Clock, CheckCircle, FileText, Users } from 'lucide-react';
+import HallNotesModal from './HallNotesModal';
 
 const HallAvailabilityCalendar = () => {
     const { token } = useAuth();
@@ -12,6 +13,11 @@ const HallAvailabilityCalendar = () => {
     // Modal State
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Notes State
+    const [noteModalOpen, setNoteModalOpen] = useState(false);
+    const [currentNote, setCurrentNote] = useState<any>('');
+    const [noteBookingId, setNoteBookingId] = useState<string | null>(null);
 
     useEffect(() => {
         fetchBookings();
@@ -106,6 +112,15 @@ const HallAvailabilityCalendar = () => {
                     );
                 })}
             </div>
+
+            {/* Notes Modal */}
+            <HallNotesModal
+                isOpen={noteModalOpen}
+                onClose={() => setNoteModalOpen(false)}
+                bookingId={noteBookingId}
+                initialNotes={currentNote}
+                onSuccess={fetchBookings}
+            />
             {/* Day Detail Modal */}
             {isModalOpen && selectedDate && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[90] p-4 animate-in fade-in duration-200">
@@ -149,9 +164,23 @@ const HallAvailabilityCalendar = () => {
                                                     </div>
 
                                                     <div className="pt-3 border-t border-dashed border-gray-100 space-y-2">
-                                                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                                                            <User size={14} className="text-blue-400" />
-                                                            <span className="font-semibold">{booking.guest.name}</span>
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                                <User size={14} className="text-blue-400" />
+                                                                <span className="font-semibold">{booking.guest.name}</span>
+                                                            </div>
+                                                            {/* Notes Trigger Icon */}
+                                                            <button
+                                                                onClick={() => {
+                                                                    setNoteBookingId(booking.id);
+                                                                    setCurrentNote(booking.notes || '');
+                                                                    setNoteModalOpen(true);
+                                                                }}
+                                                                className="text-gray-400 hover:text-blue-600 transition p-1 rounded-full hover:bg-blue-50"
+                                                                title="View/Edit Notes"
+                                                            >
+                                                                <FileText size={18} />
+                                                            </button>
                                                         </div>
                                                         <div className="flex items-center gap-2 text-xs text-gray-500">
                                                             <Clock size={14} className="text-blue-400" />
@@ -161,6 +190,29 @@ const HallAvailabilityCalendar = () => {
                                                                         '10:00 AM - 10:00 PM'}
                                                             </span>
                                                         </div>
+                                                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                            <Users size={14} className="text-blue-400" />
+                                                            <span>{booking.guestCount} Guests</span>
+                                                        </div>
+                                                        {booking.notes && (
+                                                            <div className="mt-1 bg-yellow-50 text-yellow-700 text-xs p-2 rounded border border-yellow-100 italic">
+                                                                {/* Display preview of notes (handle JSON or String) */}
+                                                                {(() => {
+                                                                    let noteText = '';
+                                                                    if (typeof booking.notes === 'string') {
+                                                                        try {
+                                                                            const parsed = JSON.parse(booking.notes);
+                                                                            noteText = parsed.text || parsed.html || booking.notes;
+                                                                        } catch {
+                                                                            noteText = booking.notes;
+                                                                        }
+                                                                    } else if (typeof booking.notes === 'object') {
+                                                                        noteText = booking.notes.text || 'Rich Text Note';
+                                                                    }
+                                                                    return `"${noteText.length > 50 ? noteText.substring(0, 50) + '...' : noteText}"`;
+                                                                })()}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             ))}
@@ -182,6 +234,8 @@ const HallAvailabilityCalendar = () => {
                     </div>
                 </div>
             )}
+
+
         </div>
     );
 };
