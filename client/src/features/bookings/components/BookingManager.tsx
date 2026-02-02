@@ -3,7 +3,7 @@ import axios from 'axios';
 import BillView from '../../billing/components/BillView';
 import { toast } from 'react-hot-toast';
 import Loader from '../../../utils/Loader';
-import { User, Calendar, LogIn, LogOut, CreditCard, X, Plus, UserCheck, Utensils, Edit2 } from 'lucide-react';
+import { User, Calendar, LogIn, LogOut, CreditCard, X, Plus, UserCheck, Utensils, Edit2, MessageCircle } from 'lucide-react';
 import AdminOrderModal from './AdminOrderModal';
 
 const BookingManager = () => {
@@ -12,7 +12,7 @@ const BookingManager = () => {
     const [rooms, setRooms] = useState<any[]>([]);
     const [showForm, setShowForm] = useState(false);
     const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
-    const [selectedBookingForOrder, setSelectedBookingForOrder] = useState<any>(null); // New State
+    const [selectedBookingForOrder, setSelectedBookingForOrder] = useState<any>(null);
     const [viewMode, setViewMode] = useState<'ACTIVE' | 'HISTORY'>('ACTIVE');
     const [isProcessing, setIsProcessing] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -152,7 +152,11 @@ const BookingManager = () => {
             } else {
                 // Create New Booking
                 const res = await axios.post('/api/bookings', payload);
-                setNewGuestCreds(res.data.credentials);
+                setNewGuestCreds({
+                    ...res.data.credentials,
+                    phoneNumber: formData.phoneNumber,
+                    guestName: formData.guestName
+                });
                 toast.success('Check-in completed successfully!');
             }
 
@@ -256,7 +260,8 @@ const BookingManager = () => {
                         <div className="flex-1">
                             <h3 className="text-xl font-bold mb-1">Check-in Successful! 🎉</h3>
                             <p className="text-green-100 mb-4">Share these credentials with the guest</p>
-                            <div className="bg-white rounded-lg p-4 text-gray-800">
+
+                            <div className="bg-white rounded-lg p-4 text-gray-800 mb-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Username</p>
@@ -268,6 +273,39 @@ const BookingManager = () => {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* WhatsApp Share Button */}
+                            <button
+                                onClick={() => {
+                                    const message = `Welcome to *Laxmi Jwahar Homestay*, ${newGuestCreds.guestName}! 
+
+We’re delighted to have you with us 
+
+*Your Digital Guest Portal*  
+Use the portal below to:  
+Order food  
+View your bill anytime  
+
+*Portal Link:*  
+https://home-stays-xi.vercel.app/
+
+*Username:* ${newGuestCreds.username}  
+*Password:* ${newGuestCreds.password}
+
+If you need any assistance, feel free to reach out.  
+Wishing you a comfortable and pleasant stay!  
+
+— *Laxmi Jwahar Homestay*`;
+
+                                    const url = `https://wa.me/91${newGuestCreds.phoneNumber}?text=${encodeURIComponent(message)}`;
+                                    window.open(url, '_blank');
+                                }}
+
+                                className="flex items-center gap-2 bg-green-500 hover:bg-green-400 text-white px-4 py-2 rounded-lg font-bold shadow-md transition-all border border-green-400 w-full sm:w-auto justify-center"
+                            >
+                                <MessageCircle size={20} />
+                                Share on WhatsApp
+                            </button>
                         </div>
                     </div>
                 </div>
