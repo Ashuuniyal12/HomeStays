@@ -63,64 +63,67 @@ const GuestManager = () => {
                 {/* Search could be added here later */}
             </div>
 
-            {/* Guest Table */}
+            {/* Guest Content */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                {/* Mobile Card View */}
+
+                {/* Mobile: Stacked Card View */}
                 <div className="block md:hidden divide-y divide-gray-100">
                     {loading ? (
-                        <div className="p-8 text-center">
-                            <Loader size={32} className="mx-auto text-blue-500" />
-                        </div>
+                        <div className="p-8 text-center"><Loader size={32} className="mx-auto text-blue-500" /></div>
                     ) : guests.length === 0 ? (
                         <div className="p-8 text-center text-gray-500">No guests found.</div>
                     ) : (
-                        guests.map((guest) => (
-                            <div
-                                key={guest.id}
-                                onClick={() => handleRowClick(guest.id)}
-                                className="p-4 hover:bg-gray-50 active:bg-blue-50 transition-colors cursor-pointer space-y-3"
-                            >
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <h3 className="font-bold text-gray-900">{guest.name}</h3>
-                                        <p className="text-xs text-gray-500 font-mono">@{guest.username}</p>
-                                    </div>
-                                    {(() => {
-                                        const count = guest.bookings ? guest.bookings.length : 0;
-                                        let tier = 'Normal';
-                                        let style = 'bg-green-50 text-green-700 border-green-200';
-                                        if (count >= 10) { tier = 'Diamond'; style = 'bg-blue-100 text-blue-700 border-blue-300'; }
-                                        else if (count >= 7) { tier = 'Gold'; style = 'bg-yellow-100 text-yellow-700 border-yellow-300'; }
-                                        else if (count >= 3) { tier = 'Silver'; style = 'bg-gray-100 text-gray-700 border-gray-300'; }
-                                        return (
-                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${style}`}>
-                                                {tier}
-                                            </span>
-                                        );
-                                    })()}
-                                </div>
+                        guests.map((guest) => {
+                            const visitCount = guest.bookings?.length || 0;
+                            let tier = 'Normal';
+                            let tierColors = 'bg-green-50 text-green-700 border-green-200';
+                            if (visitCount >= 10) { tier = 'Diamond'; tierColors = 'bg-indigo-50 text-indigo-700 border-indigo-200'; }
+                            else if (visitCount >= 7) { tier = 'Gold'; tierColors = 'bg-amber-50 text-amber-700 border-amber-200'; }
+                            else if (visitCount >= 3) { tier = 'Silver'; tierColors = 'bg-gray-100 text-gray-700 border-gray-200'; }
 
-                                <div className="grid grid-cols-2 gap-2 text-sm">
-                                    <div className="flex items-center gap-2 text-gray-600">
-                                        <Phone size={14} className="text-gray-400 shrink-0" />
-                                        <span className="truncate">{guest.phoneNumber || '--'}</span>
+                            return (
+                                <div
+                                    key={guest.id}
+                                    onClick={() => handleRowClick(guest.id)}
+                                    className="p-4 bg-white active:bg-gray-50 transition-colors cursor-pointer"
+                                >
+                                    <div className="flex justify-between items-start mb-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold">
+                                                {guest.name.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-gray-900">{guest.name}</h3>
+                                                <p className="text-xs text-gray-500 font-mono">@{guest.username}</p>
+                                            </div>
+                                        </div>
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border ${tierColors}`}>
+                                            {tier}
+                                        </span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-gray-600">
-                                        <FileText size={14} className="text-gray-400 shrink-0" />
-                                        <span className="truncate">{guest.idNumber || '--'}</span>
-                                    </div>
-                                </div>
 
-                                <div className="flex items-center gap-2 text-xs text-gray-500 pt-2 border-t border-dashed border-gray-100">
-                                    <Calendar size={12} />
-                                    Last Visit: {guest.bookings?.[0] ? new Date(guest.bookings[0].checkIn).toLocaleDateString() : 'N/A'}
+                                    <div className="space-y-2 mb-3">
+                                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                                            <Phone size={14} className="text-gray-400" />
+                                            <span>{guest.phoneNumber || 'N/A'}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                                            <FileText size={14} className="text-gray-400" />
+                                            <span>{guest.idType}: {guest.idNumber || 'N/A'}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 text-xs text-gray-500 pt-3 border-t border-dashed border-gray-100">
+                                        <Calendar size={12} />
+                                        Last Visit: {guest.bookings?.[0] ? new Date(guest.bookings[0].checkIn).toLocaleDateString() : 'N/A'}
+                                    </div>
                                 </div>
-                            </div>
-                        ))
+                            );
+                        })
                     )}
                 </div>
 
-                {/* Desktop Table View */}
+                {/* Desktop: Table View */}
                 <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
@@ -131,89 +134,81 @@ const GuestManager = () => {
                                 <th className="p-4">ID Details</th>
                                 <th className="p-4">Last Visit</th>
                                 <th className="p-4 text-center">Tier</th>
+                                <th className="p-4"></th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {loading ? (
-                                <tr>
-                                    <td colSpan={6} className="p-8 text-center">
-                                        <Loader size={32} className="mx-auto text-blue-500" />
-                                    </td>
-                                </tr>
+                                <tr><td colSpan={7} className="p-8 text-center"><Loader size={32} className="mx-auto text-blue-500" /></td></tr>
                             ) : guests.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="p-8 text-center text-gray-500">No guests found.</td>
-                                </tr>
+                                <tr><td colSpan={7} className="p-8 text-center text-gray-500">No guests found.</td></tr>
                             ) : (
-                                guests.map((guest) => (
-                                    <tr
-                                        key={guest.id}
-                                        onClick={() => handleRowClick(guest.id)}
-                                        className="hover:bg-blue-50 transition-colors cursor-pointer group"
-                                    >
-                                        <td className="p-4 font-medium text-gray-900 group-hover:text-blue-700">{guest.name}</td>
-                                        <td className="p-4 text-gray-600 font-mono text-xs">{guest.username}</td>
-                                        <td className="p-4 text-gray-600">
-                                            {guest.phoneNumber ? (
-                                                <div className="flex items-center gap-1.5">
-                                                    <Phone size={14} className="text-gray-400" />
-                                                    {guest.phoneNumber}
-                                                </div>
-                                            ) : <span className="text-gray-400 italic">--</span>}
-                                        </td>
-                                        <td className="p-4 text-gray-600">
-                                            {guest.idType ? (
-                                                <div className="flex items-center gap-1.5">
-                                                    <FileText size={14} className="text-gray-400" />
-                                                    {guest.idType}: {guest.idNumber}
-                                                </div>
-                                            ) : <span className="text-gray-400 italic">--</span>}
-                                        </td>
-                                        <td className="p-4 text-gray-600 text-sm">
-                                            {guest.bookings?.[0] ? new Date(guest.bookings[0].checkIn).toLocaleDateString() : 'N/A'}
-                                        </td>
-                                        <td className="p-4 text-center">
-                                            {(() => {
-                                                const count = guest.bookings ? guest.bookings.length : 0;
-                                                let tier = 'Normal';
-                                                let style = 'bg-green-50 text-green-700 border-green-200';
+                                guests.map((guest) => {
+                                    const visitCount = guest.bookings?.length || 0;
+                                    let tier = 'Normal';
+                                    let tierColors = 'bg-green-50 text-green-700 border-green-200';
+                                    if (visitCount >= 10) { tier = 'Diamond'; tierColors = 'bg-indigo-50 text-indigo-700 border-indigo-200'; }
+                                    else if (visitCount >= 7) { tier = 'Gold'; tierColors = 'bg-amber-50 text-amber-700 border-amber-200'; }
+                                    else if (visitCount >= 3) { tier = 'Silver'; tierColors = 'bg-gray-100 text-gray-700 border-gray-200'; }
 
-                                                if (count >= 10) { tier = 'Diamond'; style = 'bg-blue-100 text-blue-700 border-blue-300'; }
-                                                else if (count >= 7) { tier = 'Gold'; style = 'bg-yellow-100 text-yellow-700 border-yellow-300'; }
-                                                else if (count >= 3) { tier = 'Silver'; style = 'bg-gray-100 text-gray-700 border-gray-300'; }
-
-                                                return (
-                                                    <span className={`px-2 py-1 rounded-full text-xs font-bold border ${style}`}>
-                                                        {tier}
-                                                    </span>
-                                                );
-                                            })()}
-                                        </td>
-                                    </tr>
-                                ))
+                                    return (
+                                        <tr
+                                            key={guest.id}
+                                            onClick={() => handleRowClick(guest.id)}
+                                            className="hover:bg-blue-50 transition-colors cursor-pointer group"
+                                        >
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold text-xs group-hover:bg-white">
+                                                        {guest.name.charAt(0)}
+                                                    </div>
+                                                    <span className="font-bold text-gray-900 group-hover:text-blue-700">{guest.name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="p-4 text-gray-500 font-mono text-xs">{guest.username}</td>
+                                            <td className="p-4 text-gray-600 text-sm">{guest.phoneNumber || '--'}</td>
+                                            <td className="p-4 text-gray-600 text-sm">
+                                                {guest.idType ? `${guest.idType}: ${guest.idNumber}` : '--'}
+                                            </td>
+                                            <td className="p-4 text-gray-600 text-sm">
+                                                {guest.bookings?.[0] ? new Date(guest.bookings[0].checkIn).toLocaleDateString() : 'N/A'}
+                                            </td>
+                                            <td className="p-4 text-center">
+                                                <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide border ${tierColors}`}>
+                                                    {tier}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 text-gray-400 group-hover:text-blue-500">
+                                                <ChevronRight size={16} />
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>
                 </div>
+            </div>
 
-                {/* Pagination */}
-                <div className="p-4 border-t border-gray-100 flex justify-between items-center bg-gray-50">
-                    <button
-                        disabled={page === 1}
-                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                        className="px-4 py-2 bg-white border rounded-md text-sm font-medium text-gray-600 disabled:opacity-50 hover:bg-gray-50 disabled:hover:bg-white transition"
-                    >
-                        <ChevronLeft size={16} />
-                    </button>
-                    <span className="text-sm font-medium text-gray-600">Page {page} of {totalPages}</span>
-                    <button
-                        disabled={page === totalPages}
-                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                        className="px-4 py-2 bg-white border rounded-md text-sm font-medium text-gray-600 disabled:opacity-50 hover:bg-gray-50 disabled:hover:bg-white transition"
-                    >
-                        <ChevronRight size={16} />
-                    </button>
+            {/* Pagination Grid */}
+            <div className="flex justify-center items-center gap-4 mt-6">
+                <button
+                    disabled={page === 1}
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    className="p-2 rounded-full border bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm"
+                >
+                    <ChevronLeft size={20} />
+                </button>
+                <div className="px-4 py-1 bg-white border rounded-full shadow-sm text-sm font-medium text-gray-600">
+                    Page {page} of {totalPages}
                 </div>
+                <button
+                    disabled={page === totalPages}
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    className="p-2 rounded-full border bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm"
+                >
+                    <ChevronRight size={20} />
+                </button>
             </div>
 
             {/* Guest Details Modal */}
