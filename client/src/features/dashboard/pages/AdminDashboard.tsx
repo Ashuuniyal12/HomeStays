@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../auth/auth.store';
-import { LogOut, Home, Coffee, Users, DollarSign, Utensils, CalendarCheck, BarChart3, Sparkles, Menu, X } from 'lucide-react';
+import { LogOut, Home, Coffee, Users, DollarSign, Utensils, CalendarCheck, BarChart3, Sparkles, Menu, X, Package } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 import RoomManager from '../../rooms/components/RoomManager';
 import GuestManager from '../../guests/components/GuestManager';
@@ -12,10 +13,12 @@ import BillingManager from '../../billing/components/BillingDashboard';
 import DashboardStats from '../components/DashboardStats';
 import ReportsPage from './ReportsPage';
 import HallBookingManager from '../../hall/pages/HallBookingManager';
+import RentalManager from '../../rentals/RentalManager';
 import { LayoutDashboard } from 'lucide-react';
 
 const AdminDashboard = () => {
     const { logout, user } = useAuth();
+    // const navigate = useNavigate(); // Not needed for tab switch
     const [activeTab, setActiveTab] = useState('dashboard');
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -54,6 +57,7 @@ const AdminDashboard = () => {
                             <NavItem icon={<Utensils size={20} />} label="Menu" active={activeTab === 'menu'} onClick={() => { setActiveTab('menu'); setIsMobileMenuOpen(false); }} />
                             <NavItem icon={<Coffee size={20} />} label="Kitchen" active={activeTab === 'kitchen'} onClick={() => { setActiveTab('kitchen'); setIsMobileMenuOpen(false); }} />
                             <NavItem icon={<Sparkles size={20} />} label="Party Hall" active={activeTab === 'hall'} onClick={() => { setActiveTab('hall'); setIsMobileMenuOpen(false); }} />
+                            <NavItem icon={<Package size={20} />} label="Rentals" active={activeTab === 'rentals'} onClick={() => { setActiveTab('rentals'); setIsMobileMenuOpen(false); }} />
                             {user?.role === 'OWNER' && (
                                 <>
                                     <div className="pt-4 pb-2">
@@ -97,6 +101,7 @@ const AdminDashboard = () => {
                     <NavItem icon={<Utensils size={20} />} label="Menu" active={activeTab === 'menu'} onClick={() => setActiveTab('menu')} />
                     <NavItem icon={<Coffee size={20} />} label="Kitchen" active={activeTab === 'kitchen'} onClick={() => setActiveTab('kitchen')} />
                     <NavItem icon={<Sparkles size={20} />} label="Party Hall" active={activeTab === 'hall'} onClick={() => setActiveTab('hall')} />
+                    <NavItem icon={<Package size={20} />} label="Rentals" active={activeTab === 'rentals'} onClick={() => setActiveTab('rentals')} />
                     {user?.role === 'OWNER' && (
                         <>
                             <NavItem icon={<DollarSign size={20} />} label="Billing" active={activeTab === 'billing'} onClick={() => setActiveTab('billing')} />
@@ -127,6 +132,7 @@ const AdminDashboard = () => {
                 {activeTab === 'billing' && <BillingManager />}
                 {activeTab === 'reports' && <ReportsPage />}
                 {activeTab === 'hall' && <HallBookingManager />}
+                {activeTab === 'rentals' && <RentalManager />}
             </div>
         </div>
     );

@@ -137,3 +137,63 @@ model HallBookingItem {
   booking       HallBooking @relation(fields: [hallBookingId], references: [id])
   menuItem      MenuItem?   @relation(fields: [menuItemId], references: [id])
 }
+
+// RENTAL MANAGEMENT MODULE
+
+model RentalItem {
+  id          Int      @id @default(autoincrement())
+  name        String
+  category    String
+  description String?
+  price       Float
+  totalQty    Int
+  available   Boolean @default(true)
+  image       String?
+
+  rentalItems RentalOrderItem[]
+}
+
+model RentalCustomer {
+  id          String   @id @default(uuid())
+  name        String
+  phoneNumber String
+  address     String?
+  email       String?
+  idProof     String?
+  createdAt   DateTime @default(now())
+  
+  orders      RentalOrder[]
+}
+
+model RentalOrder {
+  id            String   @id @default(uuid())
+  customerId    String
+  eventDate     DateTime
+  returnDate    DateTime?
+  location      String
+  status        String    // BOOKED, OUT, RETURNED, CANCELLED
+
+  totalAmount   Float    @default(0)
+  advanceAmount Float    @default(0)
+  paidAmount    Float    @default(0)
+  extraAmount   Float    @default(0)
+  securityDeposit Float  @default(0)
+  notes           String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  customer      RentalCustomer @relation(fields: [customerId], references: [id])
+  items         RentalOrderItem[]
+}
+
+model RentalOrderItem {
+  id            String   @id @default(uuid())
+  rentalOrderId String
+  rentalItemId  Int
+  quantity      Int
+  price         Float   // snapshot: price * quantity
+
+  order         RentalOrder @relation(fields: [rentalOrderId], references: [id])
+  item          RentalItem  @relation(fields: [rentalItemId], references: [id])
+}
