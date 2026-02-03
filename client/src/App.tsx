@@ -2,6 +2,7 @@ import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './features/auth/auth.store'
 import LoginPage from './features/auth/pages/LoginPage'
+import GuestMagicLogin from './features/auth/pages/GuestMagicLogin'
 import AdminDashboard from './features/dashboard/pages/AdminDashboard'
 import GuestDashboard from './features/dashboard/pages/GuestDashboard'
 import LandingPage from './features/landing/pages/LandingPage'
@@ -30,6 +31,7 @@ function App() {
                 <Toaster position="top-center" />
                 <Routes>
                     <Route path="/login" element={<LoginPage />} />
+                    <Route path="/guest-login" element={<GuestMagicLogin />} />
                     <Route path="/admin" element={
                         <ProtectedRoute role="OWNER">
                             <AdminDashboard />

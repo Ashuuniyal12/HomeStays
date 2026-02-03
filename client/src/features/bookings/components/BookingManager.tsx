@@ -277,23 +277,22 @@ const BookingManager = () => {
                             {/* WhatsApp Share Button */}
                             <button
                                 onClick={() => {
+                                    const origin = window.location.origin;
+                                    const magicLink = `${origin}/guest-login?u=${encodeURIComponent(newGuestCreds.username)}&p=${encodeURIComponent(newGuestCreds.password)}`;
+
                                     const message = `Welcome to *Laxmi Jwahar Homestay*, ${newGuestCreds.guestName}! 
 
-We’re delighted to have you with us 
+We’re delighted to have you with us.
 
-*Your Digital Guest Portal*  
-Use the portal below to:  
-Order food  
-View your bill anytime  
+*Access Your Guest Portal*
+Click this link to instantly log in:
+${magicLink}
 
-*Portal Link:*  
-https://home-stays-xi.vercel.app/
+Use the portal to:
+🍽️ Order Food
+🧾 View Bill
 
-*Username:* ${newGuestCreds.username}  
-*Password:* ${newGuestCreds.password}
-
-If you need any assistance, feel free to reach out.  
-Wishing you a comfortable and pleasant stay!  
+Wishing you a pleasant stay!
 
 — *Laxmi Jwahar Homestay*`;
 
