@@ -14,6 +14,7 @@ router.get('/items/availability', items.checkAvailability); // ?eventDate=X&retu
 
 // --- RENTAL CUSTOMERS ---
 router.post('/customers', customers.createCustomer);
+router.get('/customers', customers.getAllCustomers);
 router.get('/customers/search', customers.searchCustomers); // ?q=...
 
 // --- RENTAL ORDERS ---

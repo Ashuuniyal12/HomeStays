@@ -37,3 +37,15 @@ export const searchCustomers = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Search failed' });
     }
 };
+
+export const getAllCustomers = async (req: Request, res: Response) => {
+    try {
+        const customers = await prisma.rentalCustomer.findMany({
+            orderBy: { createdAt: 'desc' }
+        });
+        res.json(customers);
+    } catch (err) {
+        console.error("Get All Customers Error:", err);
+        res.status(500).json({ error: 'Failed to fetch customers' });
+    }
+};

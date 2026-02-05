@@ -139,7 +139,7 @@ const RentalOrderDetail: React.FC<RentalOrderDetailProps> = ({ orderId, onClose 
                 )}
 
                 {/* Header */}
-                <div className="p-4 border-b flex justify-between items-center bg-gray-50 flex-shrink-0">
+                <div className="p-4 border-b flex justify-between items-center bg-white flex-shrink-0 z-10">
                     <div className="flex items-center gap-3">
                         {loading ? (
                             <div className="h-6 w-32 bg-gray-200 animate-pulse rounded"></div>
@@ -150,7 +150,7 @@ const RentalOrderDetail: React.FC<RentalOrderDetailProps> = ({ orderId, onClose 
                             </>
                         )}
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition">
+                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition">
                         <X size={20} />
                     </button>
                 </div>
@@ -295,6 +295,14 @@ const RentalOrderDetail: React.FC<RentalOrderDetailProps> = ({ orderId, onClose 
                                         <div className="flex justify-between text-sm">
                                             <span className="text-gray-500">Paid Amount</span>
                                             <span className="font-bold text-green-600">₹{order.paidAmount}</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-gray-500">Advance</span>
+                                            <span className="font-bold text-gray-700">₹{order.advanceAmount}</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-gray-500">Security Deposit</span>
+                                            <span className="font-bold text-gray-700">₹{order.securityDeposit}</span>
                                         </div>
                                         <div className="pt-3 border-t flex justify-between">
                                             <span className="text-gray-500 font-bold">Due Amount</span>

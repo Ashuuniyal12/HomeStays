@@ -102,31 +102,31 @@ const RentalInventory = () => {
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in duration-500">
                 {items.map(item => (
-                    <div key={item.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition group">
-                        <div className="h-40 bg-gray-100 flex items-center justify-center relative">
+                    <div key={item.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg transition-all group">
+                        <div className="h-48 bg-gray-50 flex items-center justify-center relative overflow-hidden">
                             {item.image ? (
-                                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                                <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                             ) : (
                                 <Package size={48} className="text-gray-300" />
                             )}
-                            <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 p-1.5 rounded-lg shadow-sm">
-                                <button onClick={() => openEdit(item)} className="text-blue-600 hover:text-blue-800"><Edit2 size={16} /></button>
-                                <button onClick={() => handleDelete(item.id!)} className="text-red-500 hover:text-red-700"><Trash2 size={16} /></button>
+                            <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-sm p-1.5 rounded-xl shadow-sm translate-y-2 group-hover:translate-y-0 duration-300">
+                                <button onClick={() => openEdit(item)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"><Edit2 size={16} /></button>
+                                <button onClick={() => handleDelete(item.id!)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition"><Trash2 size={16} /></button>
                             </div>
                         </div>
-                        <div className="p-4">
-                            <div className="flex justify-between items-start mb-2">
+                        <div className="p-5">
+                            <div className="flex justify-between items-start mb-2 gap-2">
                                 <div>
-                                    <h3 className="font-bold text-gray-900 truncate pr-2">{item.name}</h3>
-                                    <p className="text-xs text-gray-500 bg-gray-100 inline-block px-2 py-0.5 rounded-full">{item.category}</p>
+                                    <h3 className="font-bold text-gray-900 truncate pr-2 text-base">{item.name}</h3>
+                                    <p className="text-xs font-bold text-gray-500 bg-gray-100 inline-block px-2.5 py-1 rounded-md mt-1 uppercase tracking-wide">{item.category}</p>
                                 </div>
-                                <p className="font-bold text-blue-600">₹{item.price}</p>
+                                <p className="font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">₹{item.price}</p>
                             </div>
-                            <div className="flex justify-between items-center text-sm text-gray-600 mt-4 border-t pt-3 border-dashed">
-                                <span>Total Stock:</span>
-                                <span className="font-mono font-bold">{item.totalQty}</span>
+                            <div className="flex justify-between items-center text-sm text-gray-400 mt-4 border-t pt-3 border-dashed">
+                                <span className="text-xs font-semibold uppercase tracking-wider">In Stock</span>
+                                <span className="font-mono font-bold text-gray-700">{item.totalQty}</span>
                             </div>
                         </div>
                     </div>

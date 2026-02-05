@@ -112,10 +112,11 @@ export const createOrder = async (req: Request<{}, {}, CreateOrderBody>, res: Re
 
 // GET ORDERS
 export const getOrders = async (req: Request, res: Response) => {
-    const { status } = req.query;
+    const { status, customerId } = req.query;
     try {
         const where: any = {};
         if (status) where.status = status;
+        if (customerId) where.customerId = String(customerId);
 
         const orders = await prisma.rentalOrder.findMany({
             where,

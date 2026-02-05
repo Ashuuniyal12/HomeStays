@@ -177,23 +177,26 @@ const NewRentalOrder: React.FC<NewRentalOrderProps> = ({ onClose, onSuccess }) =
     const balance = totalAmount - (advanceAmount ? parseFloat(advanceAmount) : 0);
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-0 sm:p-4 backdrop-blur-sm animate-in fade-in">
+            <div className="bg-white rounded-none sm:rounded-xl shadow-2xl w-full max-w-6xl h-full sm:h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95">
 
                 {/* Header */}
-                <div className="p-4 border-b flex justify-between items-center bg-gray-300/50 text-blue-600 flex-shrink-0">
+                <div className="p-4 border-b flex justify-between items-center bg-white text-gray-800 flex-shrink-0 z-10">
                     <h1 className="text-xl font-bold flex items-center gap-2">
-                        <Plus size={24} /> New Rental Order
+                        <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
+                            <Plus size={20} />
+                        </div>
+                        New Rental Order
                     </h1>
-                    <button onClick={onClose} className="p-2 hover:bg-red-400 rounded-full text-red-600/80 hover:text-white transition">
+                    <button onClick={onClose} className="p-2 hover:bg-red-50 rounded-full text-gray-400 hover:text-red-500 transition">
                         <X size={20} />
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
+                <div className="flex-1 overflow-y-auto lg:overflow-hidden flex flex-col lg:flex-row">
 
                     {/* LEFT PANEL: CONFIGURATION */}
-                    <div className="flex-1 overflow-y-auto p-6 bg-gray-50 border-r border-gray-200">
+                    <div className="w-full lg:flex-1 p-4 sm:p-6 bg-gray-50 border-r border-gray-200 lg:overflow-y-auto">
 
                         {/* 1. CUSTOMER SELECT */}
                         <div className="mb-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -247,7 +250,7 @@ const NewRentalOrder: React.FC<NewRentalOrderProps> = ({ onClose, onSuccess }) =
                                         </div>
                                     ) : (
                                         <div className="space-y-3 animate-in fade-in slide-in-from-right-4">
-                                            <div className="grid grid-cols-2 gap-3">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                 <input placeholder="Full Name" className="border p-2 rounded"
                                                     value={newCustomer.name} onChange={e => setNewCustomer({ ...newCustomer, name: e.target.value })} />
                                                 <input placeholder="Phone Number" className="border p-2 rounded"
@@ -305,9 +308,9 @@ const NewRentalOrder: React.FC<NewRentalOrderProps> = ({ onClose, onSuccess }) =
 
                             <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
                                 {availableItems.map(item => (
-                                    <div key={item.id} className="flex justify-between items-center p-3 border rounded-lg hover:bg-gray-50 transition group">
-                                        <div>
-                                            <p className="font-bold text-gray-800">{item.name}</p>
+                                    <div key={item.id} className="flex justify-between items-center p-3 border rounded-lg hover:bg-gray-50 transition group gap-3">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-bold text-gray-800 truncate">{item.name}</p>
                                             <p className="text-xs text-gray-500">Stock: {item.availableQty} / {item.totalQty}</p>
                                         </div>
                                         <div className="flex items-center gap-4">
@@ -327,13 +330,13 @@ const NewRentalOrder: React.FC<NewRentalOrderProps> = ({ onClose, onSuccess }) =
                     </div>
 
                     {/* RIGHT PANEL: ORDER SUMMARY */}
-                    <div className="w-full lg:w-[400px] bg-white border-l shadow-xl flex flex-col z-20">
+                    <div className="w-full lg:w-[400px] bg-white border-l shadow-xl flex flex-col z-20 shrink-0">
                         <div className="p-6 border-b bg-gray-50">
                             <h3 className="font-bold text-gray-800 text-lg">Order Summary</h3>
                             <p className="text-sm text-gray-500">Review items and payments</p>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                        <div className="lg:flex-1 lg:overflow-y-auto p-6 space-y-4">
                             {orderItems.length === 0 ? (
                                 <div className="text-center py-10 text-gray-400 border-2 border-dashed rounded-xl">
                                     <p>No items added yet</p>

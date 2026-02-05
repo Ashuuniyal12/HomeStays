@@ -137,7 +137,13 @@ const RentalOrders = ({ openOrder: propOpenOrder }: { openOrder?: (id: number) =
                                     <div className="text-right">
                                         <p className="text-xs text-gray-400 uppercase font-bold">Total</p>
                                         <p className="text-lg font-bold text-gray-900">₹{order.totalAmount}</p>
-                                        <p className={`text-xs font-bold ${order.paidAmount >= order.totalAmount ? 'text-green-600' : 'text-orange-500'}`}>
+
+                                        <div className="flex flex-col gap-0.5 mt-1 text-[10px] text-gray-500">
+                                            <span>Adv: ₹{order.advanceAmount}</span>
+                                            <span>Sec: ₹{order.securityDeposit}</span>
+                                        </div>
+
+                                        <p className={`text-xs font-bold mt-1 ${order.paidAmount >= order.totalAmount ? 'text-green-600' : 'text-orange-500'}`}>
                                             {order.paidAmount >= order.totalAmount ? 'PAID' : `Due: ₹${order.totalAmount - order.paidAmount}`}
                                         </p>
                                     </div>

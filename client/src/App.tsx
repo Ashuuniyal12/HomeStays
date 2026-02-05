@@ -6,12 +6,12 @@ import GuestMagicLogin from './features/auth/pages/GuestMagicLogin'
 import AdminDashboard from './features/dashboard/pages/AdminDashboard'
 import GuestDashboard from './features/dashboard/pages/GuestDashboard'
 import LandingPage from './features/landing/pages/LandingPage'
-import RentalLayout from './features/rentals/RentalLayout'
 import RentalDashboard from './features/rentals/pages/RentalDashboard';
 import RentalInventory from './features/rentals/pages/RentalInventory';
 import RentalOrders from './features/rentals/pages/RentalOrders';
 import NewRentalOrder from './features/rentals/pages/NewRentalOrder';
 import RentalOrderDetail from './features/rentals/pages/RentalOrderDetail';
+import RentalCustomers from './features/rentals/pages/RentalCustomers';
 import { Toaster } from 'react-hot-toast';
 
 const ProtectedRoute = ({ children, role }: { children: React.ReactNode, role?: string }) => {
@@ -43,15 +43,7 @@ function App() {
                             <AdminDashboard />
                         </ProtectedRoute>
                     } />
-                    <Route path="/admin/rentals" element={
-                        <ProtectedRoute role="OWNER">
-                            <RentalLayout />
-                        </ProtectedRoute>
-                    }>
-                        <Route index element={<RentalDashboard />} />
-                        <Route path="inventory" element={<RentalInventory />} />
-                        <Route path="orders" element={<RentalOrders />} />
-                    </Route>
+
                     <Route path="/guest" element={
                         <ProtectedRoute role="GUEST">
                             <GuestDashboard />
